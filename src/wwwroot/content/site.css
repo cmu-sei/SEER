@@ -1,0 +1,303 @@
+﻿body {
+	font-family: "Segoe UI", Verdana, Helvetica, Sans-Serif;
+	padding-bottom: 20px;
+}
+.container {
+	width: 100%;
+}
+.main1 {
+	margin: 0 0 0 0 !important;
+	padding: 30px 30px 0 30px !important;
+}
+.user-box {
+	padding: 10px 15px 10px 15px;
+	color: #999999;
+}
+.user-name,
+a#logout {
+	color: #999999;
+	text-decoration: none;
+}
+a#signout:hover {
+	color: #fff;
+}
+/* styles for validation helpers */
+.field-validation-error {
+	color: #b94a48;
+}
+.field-validation-valid {
+	display: none;
+}
+input.input-validation-error {
+	border: 1px solid #b94a48;
+}
+input[type="checkbox"].input-validation-error {
+	border: 0 none;
+}
+.validation-summary-errors {
+	color: #b94a48;
+}
+.validation-summary-valid {
+	display: none;
+}
+/* styles for removing the background from form */
+.no-color {
+	background-color: white;
+	border-style: none;
+}
+/* -----------------------------------------------------------*/
+.well-small h3:first-child {
+	margin-top: -5px;
+}
+.label-wait {
+	display: block;
+	padding: 10px;
+	font-size: 90%;
+}
+.options label {
+	cursor: pointer;
+}
+.options label img {
+	display: block;
+}
+.answer-status {
+	display: block;
+	width: 2em;
+	height: 2em;
+	zoom: 1;
+	background-color: #ddd;
+}
+/* entried, and wainting. */
+.answer-status-Pending {
+	background-color: #ffd800;
+}
+/* correct. */
+.answer-status-Correct {
+	background-color: #20ca20;
+}
+/* incorect. */
+.answer-status-Incorrect {
+	background-color: #ff6a00;
+}
+/* Player
+-----------------------------------------------------------*/
+pre {
+	font-family: Consolas, monospace;
+	border: solid 1px;
+	border-color: #0094ff;
+	padding: 1em;
+	background-color: #f2f8fc;
+}
+.correct,
+.incorrect {
+	color: white;
+	width: 10em;
+	padding: 0.3em;
+}
+.correct {
+	background-color: #20ca20;
+}
+.incorrect {
+	background-color: #ff6a00;
+}
+.footer {
+	position: absolute;
+	width: 100%;
+	background-color: #ddd;
+	height: 3em;
+	line-height: 3em;
+	bottom: 0;
+	left: 0;
+}
+.footer a {
+	display: block;
+	margin-left: 1em;
+}
+.footer-text {
+	font-size: 11px;
+}
+.footer-img {
+	height: 35px;
+}
+.dashboard-page .nav .link-dashboard {
+	display: none;
+}
+.dashboard {
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+.dashboard .score {
+	text-align: right;
+	width: 60px;
+	padding-right: 8px;
+}
+.public-questions-page .nav .link-public-questions {
+	display: none;
+}
+/*  */
+.about-option-image,
+.disability-option-image-setup {
+	display: none;
+}
+.fileapi .about-option-image,
+.no-fileapi .disability-option-image-setup {
+	display: inline-block;
+}
+.image-holder {
+	padding-top: 4px;
+}
+img.no-image,
+.no-image img,
+.no-image .btn.remove-image {
+	display: none;
+}
+.btn-add-image {
+	display: inline-block;
+	position: relative;
+	overflow: hidden;
+}
+.no-fileapi .btn-add-image {
+	display: none;
+}
+.option-image-file {
+	position: absolute;
+	top: 0;
+	right: 0;
+	opacity: 0.001;
+	font-size: 300px;
+	height: 300px;
+	cursor: pointer;
+}
+.remove-image {
+	vertical-align: top;
+}
+.image-actions {
+	margin-top: 4px;
+}
+.btn {
+	cursor: pointer;
+}
+.jumbotron {
+	margin-top: -20px !important;
+}
+.dropdown-divider {
+	border-bottom: 1px solid #f8f8f8;
+}
+/*
+    
+    .btn-default { background-color: #d9534f; border-color: #d43f3a; }
+    .btn-primary { background-color: #d9534f !important; border-color: #d43f3a !important; }
+*/
+/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
+for details on configuring this project to bundle and minify static web assets. */
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+	padding-left: 15px;
+	padding-right: 15px;
+}
+/* Carousel */
+.carousel-caption p {
+	font-size: 20px;
+	line-height: 1.4;
+}
+/* Make .svg files in the carousel display properly in older browsers */
+.carousel-inner .item img[src$=".svg"] {
+	width: 100%;
+}
+/* QR code generator */
+#qrCode {
+	margin: 15px;
+}
+/* Hide/rearrange for smaller screens */
+@media screen and (max-width: 767px) {
+	/* Hide captions */
+	.carousel-caption {
+		display: none;
+	}
+}
+.display-3 {
+	margin-top: 8px;
+}
+.btn-default {
+	border: solid 1px #ccc;
+}
+.disabled {
+	color: #a9a9a9 !important;
+}
+.pull-right {
+	float: right;
+}
+.text-right {text-align: right;}
+#myChart {
+	width: 50px !important;
+	height: 50px !important;
+}
+.bold {
+	font-weight: bold;
+}
+.m1 {
+	padding-left: 42px;
+}
+.m2 {
+	padding-left: 70px;
+}
+.m3 {
+	padding-left: 95px;
+}
+.m4 {
+	padding-left: 130px;
+}
+.m5 {
+	padding-left: 150px;
+}
+.na {
+	color: grey;
+}
+.ok {
+	color: green;
+}
+.warn {
+	color: gold;
+}
+.bad {
+	color: darkred;
+}
+.navbar {min-height: 62px;}
+.navbar, .navbar * {
+	background-color: #3d6283 !important;
+}
+.dropdown-item, .nav-link, .nav-link * {
+	color: white !important;
+}
+.navbar * .text-warning {color: gold !important}
+.navbar * .text-danger {color: darkred !important}
+.dropdown-menu {
+	left: auto !important;
+	text-align: left;
+}
+.dropdown-menu a:hover {
+	border-bottom: 0 solid white !important;
+}
+.dropdown-toggle {
+	color: white;
+}
+@media print {
+	.table td,
+	.table th {
+		background-color: transparent !important;
+	}
+	.no-print {
+		display: none !important;
+	}
+	.no-print * {
+		display: none !important;
+	}
+}
+.td-center {
+	text-align: center;
+}
+.timer-success. .timer-success * {color: green !important;}
+.timer-warning, .timer-warning * {color: gold !important;}
+.timer-danger, .timer-danger * {color: darkred !important;}

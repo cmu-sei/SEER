@@ -1,0 +1,274 @@
+﻿@*
+SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+Copyright 2021 Carnegie Mellon University.
+NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+DM21-0384
+*@
+
+@using Seer.Infrastructure.Enums
+@using Seer.Infrastructure.Extensions
+@using Seer.Infrastructure.Models
+@model Seer.Infrastructure.ViewModels.EventHistoryTableItemWithEventAndMet
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<style>
+    .card { margin-bottom: 10px }
+    .card-body { padding: 15px; }
+    h5 { margin-top: 35px !important; }
+    .valign-middle * { vertical-align: middle !important;}
+</style>
+
+<h2><a href="@Url.Action("Index", "Events")">@ViewBag.GroupName @ViewBag.AssessmentName</a> > @ViewBag.Title</h2>
+
+<div class="form-group">
+    Below are history events matching the selected assessment and that its timeline events:
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="small pull-right">Start: @Model.Event.TimeStart - End: @Model.Event.TimeEnd</p>
+                <h3 class="card-title">@Model.Event.Name</h3>
+                    <p class="small card-text">@Model.Event.ExtendedName</p>
+                    <form method="POST">
+                    <div>
+                        <input type="hidden" name="EventId" value="@Model.Event.Id"/>
+                        <h5>Evaluation Measures</h5>
+                        <table class="table table-sm table-striped small valign-middle">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        1. Did the blue team discover OPFOR access?
+                                    </td>
+                                    <td>
+                                        <select class="score form-control form-control-sm" name="ScoreDiscovery">
+                                            <option>Select an assessment value</option>
+                                            <option value="1" @if(Model.Event.ScoreDiscovery == 1){<text> selected="selected"</text>}>Yes</option>
+                                            <option value="0" @if(Model.Event.ScoreDiscovery == 0){<text> selected="selected"</text>}>No</option>
+                                        </select>
+                                    </td>
+                                    <td class="text-right bold">@Model.Event.ScoreDiscovery</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        2. Did the blue team successfully mitigate the OPFOR attempts from above?
+                                    </td>
+                                    <td>
+                                        <select class="score form-control form-control-sm" name="ScoreRemoval">
+                                            <option>Select an assessment value</option>
+                                            <option value="1" @if(Model.Event.ScoreRemoval == 1){<text> selected="selected"</text>}>Yes</option>
+                                            <option value="0" @if(Model.Event.ScoreRemoval == 0){<text> selected="selected"</text>}>No</option>
+                                        </select>
+                                    </td>
+                                    <td class="text-right bold">@Model.Event.ScoreRemoval</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        3. Did the blue team keep OPFOR from accomplishing major network degredation?
+                                    </td>
+                                    <td>
+                                        <select class="score form-control form-control-sm" name="ScoreSeverity">
+                                            <option>Select an assessment value</option>
+                                            <option value="3" @if(Model.Event.ScoreSeverity == 3){<text> selected="selected"</text>}>Adversary unsuccessful. No degradation to network and/or mission noted</option>
+                                            <option value="2" @if(Model.Event.ScoreSeverity == 2){<text> selected="selected"</text>}>Adversary had minor success. Minor degradation to network and/or mission noted</option>
+                                            <option value="1" @if(Model.Event.ScoreSeverity == 1){<text> selected="selected"</text>}>Adversary had a major success. Major degradation to network and/or mission noted</option>
+                                            <option value="0" @if(Model.Event.ScoreSeverity == 0){<text> selected="selected"</text>}>Adversary had a major success. Major degradation to network and/or mission noted. Additionally, Blue Team unable to stop any adversary actions</option>
+                                        </select>
+                                    </td>
+                                    <td class="text-right bold">@Model.Event.ScoreSeverity</td>
+                                </tr>
+                            <tr>
+                                <td>
+                                    4. Did the blue team use and integrate intel successfuly within this operation?
+                                </td>
+                                <td>
+                                    <select class="score form-control form-control-sm" name="ScoreIntelligence">
+                                        <option>Select an assessment value</option>
+                                        <option value="3" @if(Model.Event.ScoreIntelligence == 3){<text> selected="selected"</text>}>Team successfully fused and analyzed intelligence leading to the Team conducting operations based off of this</option>
+                                        <option value="2" @if(Model.Event.ScoreIntelligence == 2){<text> selected="selected"</text>}>Team fused and analyzed intelligence leading the Team to conduct some operations based off of this</option>
+                                        <option value="1" @if(Model.Event.ScoreIntelligence == 1){<text> selected="selected"</text>}>Team sporadically fused and analyzed intelligence leading the Team conduct minimum operations based off of this</option>
+                                        <option value="0" @if(Model.Event.ScoreIntelligence == 0){<text> selected="selected"</text>}>Team did not fuse and analyze intelligence and did not use intelligence to drive hunt operations</option>
+                                    </select>
+                                </td>
+                                <td class="text-right bold">@Model.Event.ScoreIntelligence</td>
+                            </tr>
+                            @* <tr> *@
+                            @*     <td colspan="3" class="text-right bold"> *@
+                            @*         @(Model.Event.ScoreDiscovery.CalculateIntFromNullable() +  *@
+                            @*           Model.Event.ScoreRemoval.CalculateIntFromNullable() +  *@
+                            @*           Model.Event.ScoreSeverity.CalculateIntFromNullable() +  *@
+                            @*           Model.Event.ScoreIntelligence.CalculateIntFromNullable()) *@
+                            @*     </td> *@
+                            @* </tr> *@
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pull-right">
+                        <button type="submit" class="btn btn-primary">Save Assessment Values</button>
+                    </div>
+                    </form>
+                <br/>
+                <br/>
+                <hr />
+                <div class="pull-right" style="vertical-align:bottom;">
+                    <select class="score form-control form-control-sm" style="max-width:200px;" id="filter">
+                        <option value="">Show All</option>
+                        <option value="SITREP">Show SITREPs</option>
+                    </select>
+                </div>
+                <h5>History Log</h5>
+                @if (!Model.Histories.Any())
+                {
+                        <span>No history events found</span>
+                } 
+                else 
+                {
+                    <table class="table table-sm table-striped small" id="deployment_timeline">
+                    <thead>
+                        <tr>
+                            <th width="5%" class="al">ID</th>
+                            <th width="1%">Created</th>
+                            <th>Title</th>
+                            <th width="5%">Event</th>
+                            <th width="200">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var item in Model.Histories)
+                        {
+                            <tr data-value="@item.Tags">
+                                <td>@item.Id</td>
+                                <td nowrap="nowrap">@item.Created Z</td>
+                                <td>
+                                    @item.Message.BreakUpLongStrings(15)
+                                    @if (!string.IsNullOrEmpty(item.Tags))
+                                    {
+                                        <div class="small">
+                                            @foreach (var tag in item.Tags.Split(","))
+                                            {
+                                                <span class="badge rounded-pill bg-primary">@tag</span>                                            
+                                            }
+                                        </div>
+                                        
+                                    }
+                                </td>
+                                <td>
+                                    <select class="events form-control form-control-sm" style="display:inline;width: 200px" data-id="@item.Id" data-default="@item.EventId">
+                                    </select>
+                                </td>
+                                <td>
+                                    @Html.DropDownList("Status", Html.GetEnumSelectList<EventDetailHistory.EventHistoryStatus>(),
+                                    item.Status.DisplayName(),
+                                    new { @class = "status form-control form-control-sm", data_id = item.Id })
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section scripts {
+    <script>
+    $(function () {
+        $.getJSON('/api/assessments', function (data) {
+            $.getJSON('/api/seer/assessments/@this.ViewBag.AssessmentId/events', function (assessment_events) {
+                $('.events').each(function () {
+                    let x = $(this);
+                    let itemId = x.data("id");
+                    $.each(data, function (k, v) {
+                        if (@this.ViewBag.AssessmentId === v.id) {
+                            $('.events').each(function () {
+                                let e = $(this)
+                                let d = e.data("default");
+                                if (e.data("id") === itemId) {
+                                    e.empty();
+                                    e.append("<option>Assign to specfic event...</option>")
+                                    //console.log(assessment_events)
+                                    let selected = "";
+                                    $.each(assessment_events, function (k, v) {
+                                        if (d === v.id) {
+                                            selected = " selected='selected'";
+                                        } else {
+                                            selected = "";
+                                        }
+                                        e.append("<option value='" + v.id + "'" + selected + ">" + v.name + "</option>");
+                                    });
+                                }
+                            });
+                        }
+                    })
+                });
+            });
+        });
+
+        $(".events").change(function () {
+            let itemId = $(this).data("id");
+            let arr = { Id: itemId, AssessmentId: Number(@this.ViewBag.AssessmentId), EventId: Number($(this).val()) };
+            $.ajax({
+                url: "/api/eventhistory/associate",
+                type: 'POST',
+                data: JSON.stringify(arr),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: false,
+                success: function () {
+                    console.log("associated: " + itemId);
+                },
+                error: function () {
+                    console.log("error in associating event");
+                }
+            });
+        });
+        
+        $("#filter").change(function () {
+            if ($("#filter").val() === "") {
+                $('#deployment_timeline > tbody  > tr').each(function() {
+                    $(this).show()
+                });
+            } else {
+                $('#deployment_timeline > tbody  > tr').each(function() {
+                    if ($(this).data("value") === $("#filter").val()) {
+                        $(this).show()                            
+                    } else {
+                        $(this).hide()
+                    }
+                });
+            }
+        });
+
+        $(".status").change(function () {
+            let itemId = $(this).data("id");
+            let arr = { id: Number(itemId), status: $(this).val() };
+            $.ajax({
+                url: "/api/eventhistory/status",
+                type: 'POST',
+                data: JSON.stringify(arr),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: false,
+                success: function () {
+                    console.log("status updated: " + itemId);
+                },
+                error: function () {
+                    console.log("error in updating status");
+                }
+            });
+        });
+    });
+</script>
+}

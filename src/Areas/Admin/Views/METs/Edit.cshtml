@@ -1,0 +1,165 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model Seer.Infrastructure.Models.MET
+
+<style>
+    a * {
+        color: rgb(51, 125, 255);
+        cursor: pointer
+    }
+</style>
+
+<h3>METs for @ViewBag.GroupName @ViewBag.AssessmentName</h3>
+<br />
+@if (Model == null)
+{
+    <div>Sorry, but there are no Mission Essential Tasks configured for this event</div>
+}
+else
+{
+    <div class="form-inline">
+    <div class="container">
+        @foreach (var item in Model.METItems.OrderBy(x => x.Index))
+            {
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="btn-group-sm">
+                                    <i class="far fa-circle met" aria-hidden="true" title="MET ID: @item.Id"></i>
+                                    MET <input class="form-control" id="met_@(item.Id)_index" style="width:70px" type="text" value="@item.Index">
+
+                                    <input class="form-control" id="met_@item.Id" style="width:79%" type="text" value="@item.Name">
+                                    <a class="btn save" data-href="/api/mets/@Model.Id/metitems/@item.Id" data-controlid="met_@item.Id" title="Save changes to MET">
+                                        <i class="fa fa-save" aria-hidden="true" style="font-size:16px"></i>
+                                    </a>
+                                    <a class="btn del" data-href="/api/mets/@Model.Id/metitems/@item.Id/delete?g=/admin/mets/edit" data-toggle="modal" data-target="#confirm-delete" data-msg="MET and all contained SCTs">
+                                        <i class="fa fa-trash" aria-hidden="true" style="font-size:16px"></i>
+                                    </a>
+                                </h4>
+                            </div>
+                            <div class="card-block" style="padding-left:30px">
+                                @foreach (var s in item.METSCTs.OrderBy(x => x.Index))
+                                {
+                                    <div class="row">
+                                        <div class="col col-md-2">
+                                            <p class="card-text">
+                                                <i class="far fa-circle" aria-hidden="true" title="SCT ID: @s.Id"></i>
+                                                <strong>
+                                                    SCT <input class="form-control" id="met_@(item.Id)_sct_@(s.Id)_index" style="width:70px" type="text" value="@s.Index">
+                                                </strong>
+                                            </p>
+                                        </div>
+                                        <div class="col col-md-10">
+                                            <strong class="btn-group-sm">
+                                                <input class="form-control" id="met_@(item.Id)_sct_@s.Id" style="width:90%" type="text" value="@s.Name">
+                                                <a class="btn save" data-controlid="met_@(item.Id)_sct_@s.Id" data-href="/api/mets/@Model.Id/metitems/@item.Id/scts/@s.Id" title="Save changes to SCT">
+                                                    <i class="fa fa-save" aria-hidden="true" style="font-size:16px"></i>
+                                                </a>
+                                                <a class="btn del" data-href="/api/mets/@Model.Id/metitems/@item.Id/scts/@s.Id/delete?g=/admin/mets/edit" data-toggle="modal" data-target="#confirm-delete" data-msg="SCT">
+                                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                                </a>
+                                            </strong>
+                                        </div>
+                                    </div>
+                                    <br />
+                                }
+                                <div class="row">
+                                    <div class="col col-md-2">
+                                        <i class="far fa-circle" aria-hidden="true"></i>
+                                        <strong>
+                                            SCT <input class="form-control" id="met_@(item.Id)_sct_add_index" style="width:70px" type="text" placeholder="Index">
+                                        </strong>
+                                    </div>
+                                    <div class="col col-md-10">
+                                        <div class="btn-group-sm">
+                                            <input class="form-control" id="met_@(item.Id)_sct_add" style="width:90%" type="text" placeholder="Add SCT">
+                                            <a class="btn save" data-controlid="met_@(item.Id)_sct_add" data-href="/api/mets/@Model.Id/metitems/@item.Id/scts">
+                                                <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col col-md-12">
+                            <h4 class="btn-group-sm">
+                                <i class="far fa-circle" aria-hidden="true"></i>
+                                MET <input class="form-control" id="met_add_index" style="width: 70px" type="text" placeholder="Index">
+
+
+                                <input class="form-control" id="met_add" style="width:79%" type="text" placeholder="Add MET">
+                                <a class="btn save" data-href="/api/mets/@Model.Id/metitems" data-controlid="met_add">
+                                    <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                                </a>
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+}
+
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Delete
+            </div>
+            <div class="modal-body">
+                Are you sure you want to permanently delete this <span id="confirm-msg">SCT</span>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <form action="#" method="POST" id="confirm_form">
+                    <button class="btn btn-danger btn-ok" type="submit">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    $(function () {
+        $('.save').click(function () {
+            var o = { "name": $("#" + this.dataset.controlid).val(), "index": $("#" + this.dataset.controlid + "_index").val() };
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify(o),
+                url: this.dataset.href,
+                contentType: "application/json",
+                success: function () {
+                    window.location.reload(false);
+                },
+                error: function () {
+                    alert("Sorry, the data could not be saved")
+                }
+            });
+        });
+        $('.del').click(function () {
+            $('#confirm-msg').html(this.dataset.msg);
+            $('#confirm_form').attr('action', this.dataset.href);
+        })
+    });
+</script>
+}

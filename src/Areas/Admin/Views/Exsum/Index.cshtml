@@ -1,0 +1,697 @@
+@*
+SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+Copyright 2021 Carnegie Mellon University.
+NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+DM21-0384
+*@
+
+@using System.Text
+@using Newtonsoft.Json
+@using Seer.Infrastructure.Extensions
+@using Seer.Infrastructure.Models
+@model Seer.Infrastructure.Models.Campaign
+
+@{
+    static string TimespanWriter(TimeSpan? span)
+    {
+        return span.HasValue ? new DateTime(span.Value.Ticks).ToString("HH:mm:ss") : "";
+    }
+
+    static string ParseHistory(DateTime executionTime, EventDetailHistory history)
+    {
+        if (history.Message.StartsWith("Creation"))
+        {
+            return string.Empty;
+        }
+
+        var created = DateTime.Now;
+        var updatedBy = string.Empty;
+        var title = string.Empty;
+        var score = string.Empty;
+
+        if (history.IntegrationObject != null)
+        {
+            var o = JsonConvert.DeserializeObject<HiveObject>(history.IntegrationObject);
+
+            if (o.Operation == "Creation")
+            {
+                return string.Empty;
+            }
+
+            created = Convert.ToDouble(o.StartDate).FromJavaTimeStampToDateTime();
+
+            if (string.IsNullOrEmpty(o.BaseObject.UpdatedBy) || o.BaseObject.UpdatedBy.StartsWith("step-admin") || o.BaseObject.UpdatedBy.StartsWith("hive_admin"))
+            {
+                return string.Empty;
+            }
+            updatedBy = o.BaseObject.UpdatedBy;
+            if (o.BaseObject.Title != null)
+            {
+                title = o.BaseObject.Title.ToString();
+            }
+
+            // this was for demoing scoring
+            // foreach(var (key, value) in o.Details)
+            // {
+            //     if (key == "message" && value != null && value.ToString().Contains("identified"))
+            //     {
+            //         //score this somehow
+            //         score = "text-success";
+            //     }
+            // }
+        }
+        
+        var duration = (executionTime.ToLocalTime() - created.ToLocalTime()).ToString(@"hh\:mm");
+
+        var sb = new StringBuilder($"<div class='container {score} small' title='history_id: {history.Id}'><div class='row'>"); // + created + created.MillisecondsTimestamp());
+        sb.Append("<div class='.col-sm--1 history_time'>(+").Append(duration).Append(")&nbsp;</div><div class='col history_title'>");
+        sb.Append("<img src='/content/images/").Append(history.HistoryType.ToLower()).Append(".png' class='fa fa-fixed' /> ");
+        sb.Append("<span class='user'>").Append("<a href='exsum/user/").Append(history.User.Id).Append("'>").Append(history.User.Email).Append("</a> </span>");
+
+        var message = history.Message.ToLower().Replace("<", "");
+
+        message = message.Replace("[[", "<a class='group1 cboxElement' href='").Replace("]]", "'><img src='/content/images/resize.png' class='fa fa-fixed' /></a>");
+
+        sb.Append(message);
+        if (!string.IsNullOrEmpty(title))
+        {
+            sb.Append(" - ").Append(title);
+        }
+        sb.Append("</div>");
+        sb.Append("</div></div>");
+        return sb.ToString();
+    }
+
+    static string GetClass(METItemSCTScore.Score score)
+    {
+        return score switch
+        {
+            METItemSCTScore.Score.Go => "text-success",
+            METItemSCTScore.Score.Partial => "text-warning",
+            METItemSCTScore.Score.NoGo => "text-danger",
+            _ => ""
+            };
+    }
+
+    ViewBag.Title = "SEER Report";
+
+    Assessment assessment = null;
+    foreach (var operation in Model.Operations)
+    {
+        foreach (var a in operation.Assessments)
+        {
+            if (a.Id == ViewBag.AssessmentId)
+            {
+                assessment = a;
+            }
+        }
+    }
+
+    var isCondensed = !string.IsNullOrEmpty(Context.Request.Query["view"]) && Context.Request.Query["view"] == "condensed";
+}
+
+<style>
+    @@media print
+    {    
+        .navbar, .no-print, .no-print *
+        {
+            display: none !important;
+        }
+        .form-control { border:none !important;}
+    }
+    
+    .box {
+      border: 1px solid silver;
+      box-sizing: border-box;
+      display: block;
+      margin: 14px 0 16px 0;
+      padding: 20px;
+      position: relative;
+      text-align: left;
+    }
+    .form-element {border:none !important;}
+    .table-nostyle * {border:0 solid white !important;}
+    .no-print {margin:10px 0}
+    td { vertical-align: top; }
+
+    .col-2 { padding-top: 12px; }
+    .col-2 p { padding-top: 25px; }
+    h1 { font-size: 1.6em !important; }
+    h2 { font-size: 1.2em !important; font-weight:bolder;}
+    h3 { font-size: 1.0em !important; font-weight:bolder; }
+    h4 { font-size: 0.98em !important; font-weight:bolder; }
+    .pull-right { text-align: right; }
+    table, td, p, ul {margin-bottom:0 !important;}
+    .history_desc {font-size: small;}
+    .history_time {float: left; }
+    .history_title {display: block;}
+    .user {font-style: italic; color: #2b669a}
+    .fa-fixed {width: 18px; margin-top: -3px;}
+</style>
+
+<div class="container-fluid">
+<div style="margin:5px 0 30px 0">
+    <h1 class="form-inline">
+        <i class="fas fa-eye"></i> @ViewBag.GroupName @assessment.Name EXSUM - STARTEX @assessment.ExecutionTime.ToUniversalTime().ToString("F")Z
+    </h1>
+</div>
+@{
+    if (!isCondensed)
+    {
+        if (!Model.DataPoints.Any())
+        {
+            <div class="row">
+                <div class="col col-10">
+                    No datapoints for this report
+                </div>
+            </div>
+        }
+        foreach (var datapoint in Model.DataPoints)
+        {
+            <div class="row">
+                <div class="col col-2">
+                    <h2>
+                        @datapoint.Key
+                    </h2>
+                </div>
+                <div class="col col-9">
+                    <pre>@Html.Raw(datapoint.Value)</pre>
+                </div>
+                <div class="col col-1 no-print">
+                    <a href="#" class="datapoint_delete" data-href="@datapoint.Id">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        }
+    }
+}
+
+<div class="row no-print">
+    <input type="hidden" name="campaignid" value="1"/>
+    <div class="col col-2">
+        <input type="text" id="datapoint_key" class="form-control" placeholder="Key Name"/>
+    </div>
+    <div class="col col-10" style="margin-top:12px">
+        <textarea style="width: 100%; height: 150px" id="datapoint_value" class="form-control" placeholder="Key Value"></textarea>
+        <br/>
+        <button class="btn btn-primary btn-sm" id="datapoint_button">Save new datapoint</button>
+    </div>
+</div>
+@{
+    if (!assessment.Events.Any())
+    {
+        <div class="row events" style="margin:30px 0">
+            <div class="col col-10">This report has no events</div>
+        </div>
+    }
+
+    var sortedEvents = assessment.Events.OrderBy(o => o.DisplayOrder);
+    foreach (var assessmentReportEvent in sortedEvents)
+    {
+        <div class="row events">
+        <div class="col col-2">
+            <div>
+                <i class="fa text-success fa-clock"></i>
+                Event #@assessmentReportEvent.DisplayOrder<br/>
+                @assessmentReportEvent.Name
+                <div class="small">(@TimespanWriter(assessmentReportEvent.TimeStart) - @TimespanWriter(assessmentReportEvent.TimeEnd))</div>
+            </div>
+            <div class="no-print">
+                <button class="btn btn-primary btn-sm del" data-href="/api/seer/assessments/@assessment.Id/events/@assessmentReportEvent.Id/delete">
+                    <i class="fa fa-trash" aria-hidden="true"></i> Delete
+                </button>
+            </div>
+        </div>
+        <div class="col col-10">
+        @if (assessmentReportEvent.CatalogId < 1)
+        {
+            <br>
+            <br>
+            <h4>@assessmentReportEvent.Name</h4>
+        }
+        else
+        {
+            <div class="box">
+                <table class="table table-sm small" style="width: 100%;">
+                    <colgroup>
+                        <col style="width: 15%;"/>
+                        <col style="width: 75%;"/>
+                    </colgroup>
+                    <tbody>
+                    <tr>
+                        <td title="Event ID: @assessmentReportEvent.Id">
+                            <strong>Event Name</strong>
+                        </td>
+                        <td>
+                            <p>
+                                @assessmentReportEvent.ExtendedName
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Executive Summary</strong>
+                        </td>
+                        <td>
+                            <p>
+                                @assessmentReportEvent.ExecutiveSummary
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Story Line</strong>
+                        </td>
+                        <td>
+                            @Html.Raw(assessmentReportEvent.StoryLine)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Targeted Systems</strong>
+                        </td>
+                        <td>
+                            @Html.Raw(assessmentReportEvent.TargetedSystems)
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            @if (assessmentReportEvent.Details.Any())
+            {
+                <h4><i class="fas fa-book-open"></i> DETAIL</h4>
+                <div class="box">
+                    <table class="table table-sm" style="width: 100%;">
+                        <colgroup>
+                            <col style="width: 8%;">
+                            <col style="width: 23%;">
+                            <col style="width: 15%;">
+                            <col style="width: 50%;">
+                            @if (assessmentReportEvent.Details.Any(o => o.SCTs.Count > 0))
+                            {
+                                <col style="width: 2%;">
+                            }
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th>
+                                <div>Step</div>
+                            </th>
+                            <th>
+                                <div>Procedures</div>
+                            </th>
+                            <th>
+                                <div>ATT&amp;CK & Detection</div>
+                            </th>
+                            @if (assessmentReportEvent.Details.Any(o => o.SCTs.Count > 0))
+                            {
+                                <th>
+                                    <div>METL</div>
+                                </th>
+                            }
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @{
+                            var sortedDetails = assessmentReportEvent.Details.OrderBy(o => o.DisplayOrder).ToList();
+                            foreach (var eventDetail in sortedDetails)
+                            {
+                                <tr>
+                                    <td title="Event ID: @eventDetail.Id">
+                                        @eventDetail.Name
+                                        <div class="no-print">
+                                            <button class="btn btn-primary btn-sm del" data-href="/api/seer/assessments/@assessment.Id/events/@assessmentReportEvent.Id/details/@eventDetail.Id/delete">
+                                                <i class="fa fa-trash" aria-hidden="true"></i> Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <p>
+                                            @Html.Raw(eventDetail.Procedures)
+                                        </p>
+                                    </td>
+                                    <td>
+                                        @Html.Raw(eventDetail.AttackProfile)
+                                    </td>
+                                    @if (assessmentReportEvent.Details.Any(o => o.SCTs.Count > 0))
+                                    {
+                                        <td>
+                                            <table class="table-nostyle">
+                                                @{
+                                                    var metStatus = METItemSCTScore.Score.Go;
+                                                    foreach (var met in assessment.METs)
+                                                    {
+                                                        foreach (var metItem in met.METItems)
+                                                        {
+                                                            if (!string.IsNullOrEmpty(eventDetail.AssociatedSCTs))
+                                                            {
+                                                                var ids = eventDetail.AssociatedSCTs.Split(",").Select(int.Parse).ToList();
+                                                                var write = false;
+                                                                foreach (var s in metItem.METSCTs)
+                                                                {
+                                                                    if (ids.Contains(s.Id))
+                                                                    {
+                                                                        if (!write)
+                                                                        {
+                                                                            <tr>
+                                                                                <td colspan="3">
+                                                                                    <h4>MET @Html.DisplayFor(modelItem => metItem.Index) @metItem.Name</h4>
+                                                                                </td>
+                                                                            </tr>
+                                                                            write = true;
+                                                                        }
+                                                                        @if (s.Score != null)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                                                                                <td colspan="2">
+                                                                                    <p class="card-text">
+                                                                                        <i class="fa fa-check-circle @GetClass(s.Score.SCTScore)" aria-hidden="true"></i>
+                                                                                        <strong>SCT @s.Index</strong> @s.Name
+                                                                                    </p>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td colspan="2">&nbsp;</td>
+                                                                                <td>
+                                                                                    <ul>
+                                                                                        <li class="@GetClass(s.Score.SCTScore)">
+                                                                                            @s.Score.SCTScore.ToString().ToUpper():
+                                                                                            @if (s.Score != null)
+                                                                                            {
+                                                                                                if (s.Score.SCTScore != METItemSCTScore.Score.Go)
+                                                                                                {
+                                                                                                    if (metStatus != METItemSCTScore.Score.Go)
+                                                                                                    {
+                                                                                                        if (metStatus != METItemSCTScore.Score.NoGo)
+                                                                                                        {
+                                                                                                            metStatus = s.Score.SCTScore;
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                                var raw = s.Score.Comments
+                                                                                                    .Replace(Environment.NewLine, "<br />")
+                                                                                                    .Replace("<br>", "<br />")
+                                                                                                    .Replace("<br /><br />", "<br />")
+                                                                                                    .Replace("<br /><br />", "<br />");
+                                                                                                @Html.Raw(raw.Substring(0, Math.Min(raw.Length, 200)))
+                                                                                                if (raw.Length > 200)
+                                                                                                {
+                                                                                                    <span>...</span>
+                                                                                                }
+                                                                                            }
+                                                                                        </li>
+                                                                                    </ul>
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            </table>
+                                        </td>
+                                    }
+                                </tr>
+                                <tr class="no-print">
+                                    <td colspan="4" align="right">
+
+                                        <div class="row">
+                                            <div class="col col-5"></div>
+                                            <div class="col col-3">
+                                                Associate SCT
+                                            </div>
+                                            <div class="col col-3">
+                                                <select id="associate_sct_@eventDetail.Id" class="form-control sct"></select>
+                                            </div>
+                                            <div class="col col-1">
+                                                <button class="btn btn-link associate" title="Associate SCT" data-controlid="associate_sct_@eventDetail.Id" data-href="/api/seer/assessments/@assessment.Id/events/@assessmentReportEvent.Id/details/@eventDetail.Id/associate/sct/{id}">
+                                                    <i class="fa fa-save" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col col-5"></div>
+                                            <div class="col col-3">
+                                                Associate Quiz Question
+                                            </div>
+                                            <div class="col col-3">
+                                                <select id="associate_quiz_@eventDetail.Id" class="form-control quiz"></select>
+                                            </div>
+                                            <div class="col col-1">
+                                                <button class="btn btn-link associate" title="Associate quiz question" data-controlid="associate_quiz_@eventDetail.Id" data-href="/api/seer/assessments/@assessment.Id/events/@assessmentReportEvent.Id/details/@eventDetail.Id/associate/question/{id}">
+                                                    <i class="fa fa-save" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @foreach (var history in assessmentReportEvent.History)
+            {
+                <div>@Html.Raw(ParseHistory(assessment.ExecutionTime, history))</div>
+            }
+            {
+                var associatedQuizQuestionIds = new List<int>();
+                foreach (var d in assessmentReportEvent.Details)
+                {
+                    if (!string.IsNullOrEmpty(d.AssociatedQuizQuestions))
+                    {
+                        var l = d.AssociatedQuizQuestions.Split(",").Select(int.Parse).ToList();
+                        associatedQuizQuestionIds.AddRange(l);
+                    }
+                }
+                if (associatedQuizQuestionIds.Any())
+                {
+                    <h4><i class="far fa-check-circle"></i> QUIZ QUESTIONS</h4>
+                    <div class="box">
+
+                        <table class="table table-sm">
+                            @{
+                                foreach (var quiz in assessment.Quizzes)
+                                {
+                                    var sortedQuestions = quiz.Questions.OrderBy(o => o.Index).ToList();
+                                    foreach (var question in sortedQuestions)
+                                    {
+                                        if (!associatedQuizQuestionIds.Contains(question.Id))
+                                        {
+                                            continue;
+                                        }
+
+                                        var answer = string.Empty;
+                                        string correctAnswer;
+                                        if (question.Type == QuizQuestion.QuestionType.MultipleChoice)
+                                        {
+                                            correctAnswer = question.CorrectIndex switch
+                                            {
+                                                6 => question.Option6,
+                                                5 => question.Option5,
+                                                4 => question.Option4,
+                                                3 => question.Option3,
+                                                2 => question.Option2,
+                                                _ => question.Option1
+                                                };
+
+                                            if (!string.IsNullOrEmpty(question.AnsweredBy))
+                                            {
+                                                answer = question.AnsweredIndex switch
+                                                {
+                                                    6 => question.Option6,
+                                                    5 => question.Option5,
+                                                    4 => question.Option4,
+                                                    3 => question.Option3,
+                                                    2 => question.Option2,
+                                                    _ => question.Option1
+                                                    };
+                                            }
+                                        }
+                                        else
+                                        {
+                                            answer = question.AnsweredText;
+                                            correctAnswer = question.CorrectText;
+                                        }
+
+                                        var rowIcon = "exclamation-circle";
+                                        var rowStrip = "danger";
+                                        if (answer == correctAnswer)
+                                        {
+                                            rowStrip = "success";
+                                            rowIcon = "check-circle";
+                                        }
+                                        var questionType = question.Type.ToString().Replace("MultipleChoice", "Multiple Choice");
+
+                                        <tr class="table-@rowStrip">
+                                            <td style="width:24px">
+                                                <i class="fas fa-@rowIcon" aria-hidden="true"></i>
+                                            </td>
+                                            <td>@quiz.Name: Question @(question.Index). <strong>@question.Body</strong></td>
+                                            <td>@questionType</td>
+                                            <td>@answer</td>
+                                            <td>@correctAnswer</td>
+                                            <td class="right">@question.AnsweredBy</td>
+                                        </tr>
+                                    }
+                                }
+                            }
+                        </table>
+
+                    </div>
+                }
+            }
+        }
+
+        </div>
+        </div>
+    }
+}
+<div class="no-print">
+    <hr/>
+    <p>Add New Event</p>
+    <form action="/admin/seer?g=/admin/seer" method="post">
+        <div class="row" style="margin:30px 0">
+            <div class="col col-1">
+                <input type="hidden" name="assessmentid" value="@ViewBag.AssessmentId"/>
+                <input type="text" style="width:70px" name="index" placeholder="Index" class="form-control"/>
+            </div>
+            <div class="col col-10">
+                <select id="events_add" name="eventid" class="form-control"></select>
+            </div>
+            <div class="col col-1">
+                <button class="btn btn-link" title="Add new event">
+                    <i class="fa fa-save" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+</div>
+
+
+@section scripts {
+    <script src="/scripts/jquery.colorbox-min.js"></script>
+    <script>
+    $(function () {
+        $(".group1").colorbox({rel:'group1'});
+        
+        $.ajax({
+            type: "GET",
+            url: "/api/catalog",
+            contentType: "application/json",
+            success: function(result) {
+                $.each(result, function( index, value ) {
+                    $('#events_add').append('<option value="'+value.id+'">'+ value.name +' ('+ value.extendedName +')</option>');
+                });                         
+            },
+            error: function() {
+                alert("Sorry, the data gave us a hard time")
+            }
+        });
+        $.ajax({
+            type: "GET",
+            url: "/api/quizzes/@assessment.Id",
+            contentType: "application/json",
+            success: function(result) {
+                $.each(result, function( index, value ) {
+                    let q = value.name;
+                    $.each(value.questions, function(i, v){
+                        $('.quiz').append('<option value="'+v.id+'">' + q +': #' + v.id + ' ' + v.body + '</option>');
+                    });
+                });                         
+            },
+            error: function() {
+                alert("Sorry, the data gave us a hard time")
+            }
+        });
+        $.ajax({
+            type: "GET",
+            url: "/api/scts/@assessment.Id",
+            contentType: "application/json",
+            success: function(result) {
+                $.each(result, function( index, value ) {
+                    $('.sct').append('<option value="'+value.id+'">'+ value.name +'</option>');
+                });                         
+            },
+            error: function() {
+                alert("Sorry, the data gave us a hard time")
+            }
+        });
+        
+        $('.associate').click(function() {
+            let id = $("#"+this.dataset.controlid).val();
+            let url = this.dataset.href.replace("{id}", id);
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "application/json",
+                success: function() {
+                    window.location.reload(false); 
+                },
+                error: function() {
+                    alert("Sorry, the data could not be saved")
+                }
+            });
+         });
+        
+        $('.del').click(function() {
+            $.ajax({
+                type: "POST",
+                url: this.dataset.href,
+                contentType: "application/json",
+                success: function() {
+                    window.location.reload(false); 
+                },
+                error: function() {
+                    alert("Sorry, the data could not be saved")
+                }
+            });
+         })
+        
+        $("#datapoint_button").click(function() {
+            var o = {"id": 0,"key":$("#datapoint_key").val(),"value":$("#datapoint_value").val()};
+            
+            $.ajax({
+                type: "POST",
+                data :JSON.stringify(o),
+                url: "/api/seer/datapoints/1",
+                contentType: "application/json",
+                success: function() {
+                    window.location.reload(false); 
+                },
+                error: function() {
+                    alert("Sorry, the data could not be saved")
+                }
+            });
+        });
+        $(".datapoint_delete").click(function() {
+            $.ajax({
+                type: "POST",
+                url: "/api/seer/datapoints/1/"+$(this).data('href')+"/delete",
+                contentType: "application/json",
+                success: function(g) {
+                    window.location.reload(false); 
+                },
+                error: function() {
+                    alert("Sorry, the data could not be deleted")
+                }
+            });
+        });
+    });
+    </script>
+}

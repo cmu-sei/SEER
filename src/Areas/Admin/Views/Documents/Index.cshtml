@@ -1,0 +1,132 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Extensions
+@model IEnumerable<Seer.Infrastructure.Models.Document>
+
+@{
+    ViewBag.Title = "Documents";
+}
+
+<div class="pull-right">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">
+        Upload New Document
+    </button>
+</div>
+<h2><i class="fa fa-file" aria-hidden="true"></i> Documents</h2>
+<br />
+
+@Html.ValidationSummary(true)
+
+@if (!Model.Any())
+{
+    <p>No documents found - would you like to upload something?</p>
+}
+else
+{
+    <table class="table">
+    <tr>
+        <th style="text-align: center;">Download</th>
+        <th>
+            Name
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Description)
+        </th>
+        <th>
+            Public Url
+        </th>
+        <th class="text-right">
+            @Html.DisplayNameFor(model => model.Created)
+        </th>
+    </tr>
+
+    @foreach (var item in Model)
+        {
+            <tr>
+                <td style="text-align: center;">
+                    <a href="@Url.Action("Download", new {id = item.Id})">
+                        <i class="fa fa-download" aria-hidden="true"></i>
+                    </a>
+                </td>
+                <td>
+                    <a href="@Url.Action("Edit", "Documents", new {id = item.Id})">
+                        @Html.DisplayFor(model => item.Name)
+                    </a>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Description)
+                </td>
+                <td>
+                    @if (item.Location.GetPublicUrl() != string.Empty)
+                    {
+                        <a href="@item.Location.GetPublicUrl()" target="docs">@item.Location.GetPublicUrl()</a>
+                    }
+                </td>
+                <td class="text-right">
+                    @Html.DisplayFor(modelItem => item.Created)
+                </td>
+            </tr>
+        }
+
+    </table>
+}
+
+
+<form action="documents/savefile" method="POST" enctype="multipart/form-data">
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Choose a document for upload...</h5>
+                </div>
+                <div class="modal-body">
+
+                    <div class="container">
+                        <div class="row">
+                            <label for="File" style="width:100px">Filename:</label>
+                            <input type="file" name="File" id="File" />
+                        </div>
+                        <br />
+                        <div class="row">
+                            <label for="Type" style="width:100px">Access:</label>
+                            <select name="Type" id="Type">
+                                <optgroup label="Generic">
+                                    <option>Public</option>
+                                    <option>Private</option>
+                                </optgroup>
+                                <optgroup label="Specific Files">
+                                    <option>Inbrief</option>
+                                    <option>Map</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <br />
+                        <div class="row">
+                            <label for="Description" style="width:100px">Description:</label>
+                            <textarea id="Description" name="Description"></textarea>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

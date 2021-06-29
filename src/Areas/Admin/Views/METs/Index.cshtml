@@ -1,0 +1,43 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model Seer.Areas.EO.ViewModels.EODashboardViewModel
+
+@{
+    ViewBag.Title = "EO METs Admin";
+}
+
+<h2><i class="fa fa-eye" aria-hidden="true"></i> EO METs</h2>
+<hr />
+<br />
+
+@foreach (var met in Model.METs)
+{
+    <div class="container" style="bottom:20px">
+    <a class="btn btn-primary" href="@Url.Action("Edit", new {id = met.Id})">@met.Name EDIT</a>
+</div>
+
+
+    <div class="active" id="@("home-"+met.Id)" role="tabpanel" aria-labelledby="home-tab">
+    @foreach (var item in met.METItems)
+        {
+            <div class="container">
+                <strong>MET @Html.DisplayFor(modelItem => item.Index) @item.Name</strong><br />
+                @foreach (var s in item.METSCTs)
+                {
+                    <text>SCT @s.Index: @s.Name<br /></text>
+                }
+            </div>
+        }
+    </div>
+
+}

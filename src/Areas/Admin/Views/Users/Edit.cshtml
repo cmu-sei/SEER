@@ -1,0 +1,277 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model Seer.Infrastructure.ViewModels.UserViewModel
+
+@{
+    ViewBag.Title = "Edit User";
+}
+
+<style>
+    #roles_current {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    #roles_current li {
+        float: left;
+        margin: 0 15px
+    }
+</style>
+
+@using (Html.BeginForm())
+{
+
+    <div class="pull-right">
+    <a href="/admin/users">Back to List</a> &nbsp; <input type="submit" value="Save" class="btn btn-primary" />
+</div>
+    <h2>Edit user @Model.FirstName @Model.LastName</h2>
+    <hr />
+
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(model => model.Id)
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Role, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Role, new { htmlAttributes = new { @class = "form-control", disabled = "disabled" } })
+            @Html.ValidationMessageFor(model => model.Id, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Id, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Id, new { htmlAttributes = new { @class = "form-control", disabled = "disabled" } })
+            @Html.ValidationMessageFor(model => model.Id, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.FirstName, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.FirstName, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.FirstName, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.LastName, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.LastName, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.LastName, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Rank, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Rank, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Rank, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.DutyPosition, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.DutyPosition, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.DutyPosition, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.UserName, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.UserName, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.UserName, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Email, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Email, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Created, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Created, new { htmlAttributes = new { @class = "form-control", disabled = "disabled" } })
+            @Html.ValidationMessageFor(model => model.Created, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <br />
+    <div class="form-group">
+        <p class="bold">Groups:</p>
+        <div style="padding-left:10px;">
+            @foreach (var group in Model.Groups.OrderBy(x => x.Name))
+                {
+                    <a href="@Url.Action("Edit", "Groups", new {id = group.Id})">
+                        @group.Name
+                    </a>
+                    <a href="#" class="btn btn-link group_remove" title="Remove from group" data-href="/api/groups/@group.Id/users/@Model.Id/delete">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </a>
+                }
+                @if (!Model.Groups.Any())
+                {
+                    <div>No group associations found</div>
+                }
+            </div>
+            <div class="row" style="margin:30px 0">
+                <div class="col col-2">
+                    Add to group:
+                </div>
+                <div class="col col-9">
+                    <select id="groups_add" class="form-control"></select>
+                </div>
+                <div class="col col-1">
+                    <a href="#" class="btn btn-link" title="Add to group" id="groups_add_btn" data-controlid="groups_add" data-href="/api/groups/{groupId}/users/@Model.Id">
+                        <i class="fa fa-save" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <p class="bold">Roles:</p>
+            <div>
+                <ul id="roles_current"></ul>
+            </div>
+            <br />
+            <div class="row clearfix" style="margin:30px 0">
+                <div class="col col-2">
+                    Add role:
+                </div>
+                <div class="col col-9">
+                    <select id="roles_add" class="form-control"></select>
+                </div>
+                <div class="col col-1">
+                    <a href="#" class="btn btn-link" title="Add to role" id="roles_add_btn" data-controlid="roles_add" data-href="/api/users/@Model.Id/roles/{role}">
+                        <i class="fa fa-save" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts {
+<script>
+    $(function () {
+        $.ajax({
+            type: "GET",
+            url: "/api/groups",
+            contentType: "application/json",
+            success: function (result) {
+                $.each(result, function (index, value) {
+                    $('#groups_add').append('<option value="' + value.id + '">' + value.name + '</option>');
+                });
+            },
+            error: function () {
+                alert("Sorry, the data gave us a hard time")
+            }
+        });
+        $.ajax({
+            type: "GET",
+            url: "/api/users/@Model.Id/roles",
+            contentType: "application/json",
+            success: function (result) {
+                console.log(result)
+                if (result === undefined || result.length === 0) {
+                    $('#roles_current').append('<li>User not assigned any specific role</li>');
+                }
+                $.each(result, function (index, value) {
+                    $('#roles_current').append('<li>' + value + ' <a href="#" class="btn btn-link role_remove" title="Remove from group" data-href="/api/users/@Model.Id/roles/' + value + '/delete"><i class="fa fa-trash" aria-hidden="true"></i></a></li>');
+                });
+            },
+            error: function () {
+                alert("Sorry, the data gave us a hard time")
+            }
+        });
+        $.ajax({
+            type: "GET",
+            url: "/api/roles",
+            contentType: "application/json",
+            success: function (result) {
+                $.each(result, function (index, value) {
+                    $('#roles_add').append('<option value="' + value + '">' + value + '</option>');
+                });
+            },
+            error: function () {
+                alert("Sorry, the data gave us a hard time")
+            }
+        });
+        $('#roles_add_btn').click(function () {
+            let role = $("#" + this.dataset.controlid).val();
+            let url = this.dataset.href.replace("{role}", role);
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "application/json",
+                success: function () {
+                    window.location.reload(false);
+                },
+                error: function () {
+                    alert("Sorry, the data could not be saved")
+                }
+            });
+        });
+        $('#groups_add_btn').click(function () {
+            let group_id = $("#" + this.dataset.controlid).val();
+            let url = this.dataset.href.replace("{groupId}", group_id);
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "application/json",
+                success: function () {
+                    window.location.reload(false);
+                },
+                error: function () {
+                    alert("Sorry, the data could not be saved")
+                }
+            });
+        });
+        $('.group_remove').click(function () {
+            $.ajax({
+                type: "POST",
+                url: this.dataset.href,
+                contentType: "application/json",
+                success: function () {
+                    window.location.reload(false);
+                },
+                error: function () {
+                    alert("Sorry, the data could not be saved")
+                }
+            });
+        });
+        $('body').on('click', '.role_remove', function () {
+            console.log(this.dataset.href)
+            $.ajax({
+                type: "POST",
+                url: this.dataset.href,
+                contentType: "application/json",
+                success: function () {
+                    window.location.reload(false);
+                },
+                error: function () {
+                    alert("Sorry, the data could not be saved")
+                }
+            });
+        });
+    });
+</script>
+}

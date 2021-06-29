@@ -1,0 +1,62 @@
+@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model IEnumerable<Seer.Infrastructure.Models.Event>
+@{
+    ViewBag.Title = "Executive Summary";
+}
+
+<h2>
+    @ViewBag.GroupName @ViewBag.AssessmentName - @ViewBag.Title
+</h2>
+
+<div class="row" style="margin-top: 30px">
+    <div class="col-sm-12">
+        <table class="table table-sm table-striped" id="main">
+            <thead>
+                <tr>
+                    <td>Event</td>
+                    <td>Assigned</td>
+                    <td>Description</td>
+                    <td class="td-center">Status</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.AssignedTo?.Name()</td>
+                        <td>@item.ExtendedName</td>
+                        <td class="td-center">
+                            @{
+                                var status = string.Empty;
+                                var icon = "fa-feather";
+                                if (item.TimeStart.HasValue && item.TimeEnd.HasValue)
+                                {
+                                    status = "ok";
+                                    icon = "fa-check-circle";
+                                }
+                                else if (item.TimeStart.HasValue && !item.TimeEnd.HasValue)
+                                {
+                                    status = "warn";
+                                    icon = "fa-check-circle";
+                                }
+                            }
+                            <i id="status-@item.Id" class="fa @icon @status" aria-hidden="true"></i>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

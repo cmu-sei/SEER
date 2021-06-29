@@ -1,0 +1,90 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Enums
+@using Seer.Infrastructure.Models
+@model Seer.Infrastructure.Models.MET
+
+@section scripts{
+<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script src="~/scripts/eo/met.js?@Guid.NewGuid().ToString()"></script>
+<script src="~/scripts/Chart.min.js"></script>
+}
+
+@if (Model != null)
+{
+    <h3 class="pull-right"><span id="complete">0</span>% SCTs Completed Successfully
+</h3>
+    <div class="pull-right" style="margin: -5px 20px 0 0;">
+    <canvas id="myChart"></canvas>
+</div>
+}
+
+<h3>METs for @ViewBag.GroupName @ViewBag.AssessmentName</h3>
+<br />
+@if (Model == null)
+{
+    <div>Sorry, but there are no Mission Essential Tasks configured for this event</div>
+}
+else
+{
+    foreach (var item in Model.METItems.OrderBy(o => o.Index))
+    {
+        <div class="card">
+    <div class="card-header">
+        <h4><i class="fa fa-circle-thin met" aria-hidden="true" data-id="@item.Id"></i> MET @Html.DisplayFor(modelItem => item.Index) @item.Name</h4>
+    </div>
+    <div class="card-block" style="padding-left:30px">
+        @foreach (var s in item.METSCTs.OrderBy(o => o.Index))
+                {
+                    <div class="row">
+                        <div class="col col-md-1">
+                            <p class="card-text @if(s.Status == ActiveStatus.Inactive){<text> disabled</text>}">
+                                <i class="fa fa-circle-thin sct @("met-" + item.Id)" aria-hidden="true" data-id="@s.Id"></i>
+                                <strong>SCT @s.Index</strong>
+                            </p>
+                        </div>
+                        <div class="col col-md-9">
+                            <p class="card-text">
+                                <strong @if(s.Status == ActiveStatus.Inactive){<text> class="disabled"</text>}>@s.Name</strong>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-md-1">
+                            <input type="hidden" id="visibility-@s.Id" value="@s.Status" />
+                        </div>
+                        <div class="col col-md-9">
+                            <textarea class="form-control option @if(s.Status == ActiveStatus.Inactive){<text> disabled</text>}" id="comments-@s.Id" @if(s.Status == ActiveStatus.Inactive){<text> disabled="disabled"</text>}>@if (s.Score != null)
+                                {
+                                    @s.Score.Comments
+                                }
+                                        </textarea>
+                        </div>
+                        <div class="col col-md-2">
+                            <select class="form-control form-control-sm option @if(s.Status == ActiveStatus.Inactive){<text> disabled</text>}" id="status-@s.Id" @if(s.Status == ActiveStatus.Inactive){<text> disabled="disabled"</text>}>
+                                <option value="0">Status</option>
+                                <option value="1" @if (s.Score != null && s.Score.SCTScore == METItemSCTScore.Score.Go) { <text> selected="selected" </text> }>GO</option>
+                                <option value="2" @if (s.Score != null && s.Score.SCTScore == METItemSCTScore.Score.NoGo) { <text> selected="selected" </text> }>NO GO</option>
+                                <option value="3" @if (s.Score != null && s.Score.SCTScore == METItemSCTScore.Score.Partial) { <text> selected="selected" </text> }>PARTIAL</option>
+                            </select>
+                        </div>
+                    </div>
+                    <br />
+                }
+            </div>
+        </div>
+        <br />
+    }
+    <input type="hidden" id="metid" value="@Model.Id" />
+    <input type="hidden" id="assessmentid" value="@Model.AssessmentId" />
+}

@@ -1,0 +1,161 @@
+@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Extensions
+@model System.Collections.Generic.IEnumerable<Seer.Infrastructure.Models.Event>
+
+@{
+    ViewBag.Title = "User Report";
+
+    static string TimespanWriter(TimeSpan? span)
+    {
+        return span.HasValue ? new DateTime(span.Value.Ticks).ToString("HH:mm:ss") : "";
+    }
+}
+
+<style>
+    .box {
+        border: 1px solid silver;
+        box-sizing: border-box;
+        display: block;
+        margin: 14px 0 16px 0;
+        padding: 20px;
+        position: relative;
+        text-align: left;
+    }
+
+    .table-nostyle * {
+        border: 0 solid white !important;
+    }
+
+    td {
+        vertical-align: top;
+    }
+
+    .col-2 {
+        padding-top: 12px;
+    }
+
+    .col-2 p {
+        padding-top: 25px;
+    }
+
+    h1 {
+        font-size: 1.6em !important;
+    }
+
+    h2 {
+        font-size: 1.2em !important;
+        font-weight: bolder;
+    }
+
+    h3 {
+        font-size: 1.0em !important;
+        font-weight: bolder;
+    }
+
+    h4 {
+        font-size: 0.98em !important;
+        font-weight: bolder;
+    }
+
+    table,
+    td,
+    p,
+    ul {
+        margin-bottom: 0 !important;
+    }
+</style>
+
+<h2>@ViewBag.Title</h2>
+<br />
+
+@foreach (var assessmentReportEvent in Model)
+{
+    <div class="row events">
+    <div class="col col-2">
+        <div>
+            <i class="fa text-success fa-clock"></i>
+            Event #@assessmentReportEvent.DisplayOrder<br />
+            @assessmentReportEvent.Name
+            <div class="small">(@TimespanWriter(assessmentReportEvent.TimeStart) - @TimespanWriter(assessmentReportEvent.TimeEnd))</div>
+        </div>
+    </div>
+    <div class="col col-10">
+        @if (assessmentReportEvent.CatalogId < 1)
+            {
+                <br>
+                <br>
+                <h4>@assessmentReportEvent.Name</h4>
+            }
+            else
+            {
+                <div class="box">
+                    <table class="table table-sm small" style="width: 100%;">
+                        <colgroup>
+                            <col style="width: 15%;" />
+                            <col style="width: 75%;" />
+                        </colgroup>
+                        <tbody>
+                            <tr>
+                                <td title="Event ID: @assessmentReportEvent.Id">
+                                    <strong>Event Name</strong>
+                                </td>
+                                <td>
+                                    <p>
+                                        @assessmentReportEvent.ExtendedName
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Executive Summary</strong>
+                                </td>
+                                <td>
+                                    <p>
+                                        @assessmentReportEvent.ExecutiveSummary
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Story Line</strong>
+                                </td>
+                                <td>
+                                    @Html.Raw(assessmentReportEvent.StoryLine)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Targeted Systems</strong>
+                                </td>
+                                <td>
+                                    @Html.Raw(assessmentReportEvent.TargetedSystems)
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <table class="table table-sm table-striped table-condensed small">
+                    @foreach (var history in assessmentReportEvent.History)
+                    {
+                        <tr>
+                            <td>@history.Id</td>
+                            <td>@history.Message.BreakUpLongStrings(40)</td>
+                            <td nowrap="nowrap">@history.Created</td>
+                        </tr>
+                    }
+                </table>
+            }
+        </div>
+    </div>
+}

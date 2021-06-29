@@ -1,0 +1,379 @@
+@*
+SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+Copyright 2021 Carnegie Mellon University.
+NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+DM21-0384
+*@
+
+@model IEnumerable<Seer.Infrastructure.Models.Event>
+@{
+    ViewBag.Title = "Deployment Timeline";
+}
+
+<style>
+    .ac { text-align: center;}
+    .al { text-align: left;}
+    table * p {margin-bottom:0}
+    textarea {margin-right:20px !important}
+    .al:hover{ cursor:move; }
+    .fa-fixed { width: 18px; }
+    .history_table * { border: 0 !important; font-size: 11px; word-wrap: anywhere; }
+    .history_icon {width: 24px; margin: 0; padding: 0;}
+    .sm * { font-size:11px !important; }
+    .th-w-5 { width: 5% }
+    .th-w-25 { width: 25% }
+    .th-w-50 { width: 50% }
+</style>
+
+<h2>
+    @ViewBag.GroupName @ViewBag.AssessmentName - @ViewBag.Title
+</h2>
+
+<button class="btn btn-secondary" type="button" disabled id="status">
+  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+  Loading...
+</button>
+
+<div class="row" style="margin-top: 30px">
+    <div class="col-sm-12">
+        <table class="table table-sm table-striped" id="deployment_timeline">
+            <thead>
+            <tr>
+                <th class="th-w-5 al">Time</th>
+                <th class="th-w-5">Assigned</th>
+                <th class="th-w-25">Event Description/Details</th>
+                <th class="th-w-50">Execution Notes</th>
+                <th class="th-w-5 al">Start</th>
+                <th class="th-w-5">Complete</th>
+                <th class="th-w-5 al">Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            
+            @foreach (var item in Model)
+            {
+                var rowStripe = "";
+                if (!string.IsNullOrEmpty(item.Name))
+                {
+                    if (item.Name.ToLower().Contains("startex"))
+                    {
+                        rowStripe = "table-success";
+                    }
+                    else if (item.Name.ToLower().Contains("endex"))
+                    {
+                        rowStripe = "table-danger";
+                    }
+                }
+                <tr class="@rowStripe" data-id="@item.Id">
+                    <td class="al">
+                        <input type="text" value="@item.TimeScheduled" style="width:100px" class="edit form-control form-control-sm" id="timeScheduled-@item.Id" />
+                        <input type="hidden" value="@item.DisplayOrder" class="edit displayOrder" id="displayOrder-@item.Id" />
+                    </td>
+                    <td nowrap="nowrap">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                        <select class="users edit form-control form-control-sm" id="assignedto-@item.Id" data-current="@item.AssignedTo.Id" style="display:inline;width: 150px"></select>
+                    </td>
+                    <td>
+                        <div>
+                            <input type="text" value="@item.Name" class="edit form-control form-control-sm" id="name-@item.Id" />
+                        </div>
+                        <div>
+                            <textarea class="edit form-control form-control-sm" id="extendedName-@item.Id">@item.ExtendedName</textarea>
+                        </div>
+                        @if (@item.CatalogId > 0)
+                        {
+                            <div class="sm"><a href="../catalog/@item.CatalogId">Original Catalog Entry</a></div>
+                        }
+                    </td>
+                    <td>
+                        <table id="history-@item.Id" data-id="@item.Id" class="history history_table"></table>
+                        <div class="sm">
+                            <a href="#" data-toggle="modal" data-target="#modalNote" data-id="@item.Id" title="Add Execution Note">
+                                <i class="fa fa-comment" aria-hidden="true"></i>+
+                            </a>
+                        </div>
+                    </td>
+                    <td nowrap="nowrap" class="sm">
+                        <input type="checkbox" class="edittime" @if(item.TimeStart.HasValue){<text> checked="checked"</text>} id="timestart-@item.Id" data-type="start" />
+                        <span id="timestartActual-@item.Id">
+                        @if (@item.TimeStart.HasValue)
+                        {
+                            @item.TimeStart.Value.ToString(@"hh\:mm", null)
+                        }
+                        </span>
+                    </td>
+                    <td nowrap="nowrap" class="sm">
+                        <input type="checkbox" class="edittime" @if(item.TimeEnd.HasValue){<text> checked="checked"</text>} id="timeend-@item.Id" data-type="end" />
+                        <span id="timeendActual-@item.Id">
+                        @if (@item.TimeEnd.HasValue)
+                        {
+                            @item.TimeEnd.Value.ToString(@"hh\:mm", null)
+                        }
+                        </span>
+                    </td>
+                    <td class="ac">
+                        @{
+                            var status = string.Empty;
+                            if (item.TimeStart.HasValue && @item.TimeEnd.HasValue)
+                            {
+                                status = "ok";
+                            }
+                            else if (item.TimeStart.HasValue && !item.TimeEnd.HasValue)
+                            {
+                                status = "warn";
+                            }
+                        }
+                        <i id="status-@item.Id" class="fa fa-check-circle @status" aria-hidden="true"></i>
+                    </td>
+                </tr> 
+            }
+            
+            <tr>
+                <td colspan="7" align="right">
+                    <div>
+                        <select class="form-control-sm" id="new_catalog_items"></select> &nbsp;
+                        <a href="#" style="font-size:125%;" id="btn_new_catalog_items"><i class="fa fa-save" aria-hidden="true"></i></a>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    
+    <div class="modal fade show" id="modalNote" tabindex="-1" aria-labelledby="modalNote" aria-modal="true" role="dialog" data-id="">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalCenterTitle">Add Execution Note</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="newNoteText">Note</label>
+                <textarea class="form-control" id="newNoteText" rows="3"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="addNoteButton">Save Note</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+
+    <script>
+        $(function () {
+            function splitOnTac(o) {
+                return o.toString().split("-");
+            }
+            
+            function formatMessage(o) {
+                o = o.replace(/[\n\r]/g, '<br/>');
+                let a = o.split(" ")
+                o = "";
+                for (let i = 0; i < a.length; i++) {
+                    if (a[i]) {
+                    o += a[i].match(/.{1,30}/g).join(" ") + " "; }
+                }
+                return o;
+            }
+            
+            function formatHistoryItem(eventId, historyType, created, fName, msg) {
+                let t = moment.utc(created); 
+                if (fName === "" || fName === null) fName = "System";
+                let icon = '<img src="/content/images/'+ historyType.toLowerCase() +'.png" title="'+ historyType +'" class="fa fa-fixed" />';
+                return '<tr id="note-'+ eventId +'"><td class="history_icon">'+ icon + '</td><td nowrap="nowrap">' + 
+                    t.fromNow()+'</td><td nowrap="nowrap">'+ fName +
+                    '</td><td>'+ formatMessage(msg) +'</td></tr>';
+            }
+            
+            let fixHelperModified = function(e, tr) {
+                let $originals = tr.children();
+                let $helper = tr.clone();
+                $helper.children().each(function(index) {
+                    $(this).width($originals.eq(index).width())
+                });
+                return $helper;
+            },
+            updateIndex = function(e, ui) {
+                $('td.index', ui.item.parent()).each(function (i) {
+                    $(this).html(i+1);
+                });
+                $('input[type=text]', ui.item.parent()).each(function (i) {
+                    $(this).val(i + 1);
+                });
+            };
+            
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/execution?assessmentid=@ViewBag.AssessmentId")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+                                   
+            $('#modalNote').on('show.bs.modal', function (event) {
+              let button = $(event.relatedTarget);
+              let id = button.data('id');
+              $(this).data("id", id);
+            })
+            
+            $("#deployment_timelinemyTable tbody").sortable({
+                helper: fixHelperModified,
+                stop: updateIndex
+            }).disableSelection();
+            
+                $("tbody").sortable({
+                distance: 5,
+                delay: 1000,
+                opacity: 0.6,
+                cursor: 'move',
+                update: function(e,ui) {
+                    $('tbody tr').each(function(i, obj) {
+                        let eventId = $(this).data("id");
+                        if (eventId !== undefined){
+                            $("#displayOrder-" + eventId).val(i+1);
+                            connection.invoke("TimelineEvent", Number(eventId), Number($("#displayOrder-" + eventId).val()), $("#assignedto-" + eventId).val().toString(), 
+                                $("#name-" + eventId).val().toString(), $("#extendedName-" + eventId).val().toString(), $("#timeScheduled-" + eventId).val().toString());
+                        }
+                        i++;
+                    })
+                    connection.invoke("Refresh");
+                }
+            });
+                
+            //fill new catalog items
+            $.getJSON('/api/catalog', function(data){
+                let x = $('#new_catalog_items');
+                x.html('');
+                x.append('<option value="0">Add new timeline event</option>');
+                x.append('<option value="0">Add new blank event (a non-catalog event)</option>');
+                $.each(data, function(key, val){
+                    x.append('<option value="' + val.id + '">' + val.name + ' ' + val.extendedName + '</option>');
+                })
+            });
+            
+            //fill users
+            $.getJSON('/api/users', function(data){
+                $('.users').each(function() {
+                    let x = $(this);
+                    x.html('');
+                    $.each(data, function(key, val){
+                        let isAdmin = false;
+                        $.each(val.roles, function(k,v) {
+                          if (v === "Admin"){
+                              isAdmin = true;
+                          }
+                        });
+                       if (isAdmin){
+                           let a = x.data('current');
+                           let selected = "";
+                           if (a === val.id){
+                               selected = ' selected="selected"';
+                           }
+                           x.append('<option value="' + val.id + '"'+selected+'>' + val.firstName + '</option>');
+                       }
+                    })
+                })
+            });
+            
+            //history
+            $.getJSON('/api/seer/assessments/@ViewBag.AssessmentId/history', function(data){
+                $('.history').each(function(i, obj) {
+                    let x = $(this);
+                    let eventId = x.data("id");
+                    $.each(data, function(key, val){
+                        if (val.eventId === eventId){
+                            let u = val.user;
+                            let fName = "";
+                            if (u !== null)
+                                fName = u.firstName;
+                            x.prepend(formatHistoryItem(eventId, val.historyType, val.created, fName, val.message.replace("<", "")));
+                        }
+                       })
+                       $('#status').hide();
+                    })
+                
+            });
+            
+            $('#btn_new_catalog_items').click(function(){
+                let arr = { AssessmentId: @ViewBag.AssessmentId, CatalogId: $("#new_catalog_items option:selected").val(), DisplayOrder: $('#deployment_timeline tr').length - 1 };
+                $.ajax({
+                    url: '/api/execution',
+                    type: 'POST',
+                    data: JSON.stringify(arr),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    async: false,
+                    success: function() {
+                        location.reload();
+                    }
+                });
+            });
+            
+            $('#addNoteButton').click(function(){
+                connection.invoke("Note", $("#modalNote").data("id"), "", "NOTE", $("#newNoteText").val(), "");
+                $("#newNoteText").val("")
+                $('#modalNote').modal('hide')
+            });
+       
+            $(".edittime").on("change", null, function () {
+                let type = $(this).data('type');
+                let eventId = splitOnTac(this.id);
+                eventId = eventId[1];
+                connection.invoke("MarkTime", Number(eventId), type.toString(), $(this).is(':checked').toString(), "");
+            });
+        
+            $(".edit").on("change", null, function () {
+                let eventId = splitOnTac(this.id);
+                eventId = eventId[1];
+                connection.invoke("TimelineEvent", Number(eventId), Number($("#displayOrder-" + eventId).val()), $("#assignedto-" + eventId).val().toString(), 
+                $("#name-" + eventId).val().toString(), $("#extendedName-" + eventId).val().toString(), $("#timeScheduled-" + eventId).val().toString());
+            });
+            
+            connection.on("note", function (eventId, userId, historyType, message, created) {
+                $("#history-" + eventId).prepend(FormatHistoryItem(eventId, historyType, created, userId, message.replace("<", ""))).effect("highlight", {}, 200);
+            });
+            
+            connection.on("marktime", function (eventId, type, complete, timeReturned) {
+                $("#time"+ type +"Actual-" + eventId).html(timeReturned);
+                
+                $("#time"+type+"-" + eventId).prop('checked', complete.toUpperCase() === "TRUE");
+                
+                $("#status-" + eventId).removeClass("ok");
+                $("#status-" + eventId).removeClass("warn");
+                if ($("#timestart-" + eventId).is(':checked') && !$("#timeend-" + eventId).is(':checked')){
+                    $("#status-" + eventId).addClass("warn");
+                } else if ($("#timestart-" + eventId).is(':checked') && $("#timeend-" + eventId).is(':checked')){
+                    $("#status-" + eventId).addClass("ok");
+                }
+            });
+            
+            connection.on("refresh", function () {
+                //location.reload();
+            });
+            
+            connection.on("timelineevent", function (eventId, displayOrder, assignedTo, name, extendedName, 
+            timeScheduled) {
+                $("#displayOrder-" + eventId).val(displayOrder);
+                $("#name-" + eventId).val(name);
+                $("#extendedName-" + eventId).val(extendedName);
+                $("#timeScheduled-" + eventId).val(timeScheduled);
+                $("#assignedto-" + eventId).val(assignedTo)
+            });
+
+            connection.start().catch(err => console.error(err.toString()));
+        });
+    </script>
+}

@@ -1,0 +1,56 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model IEnumerable<Seer.Infrastructure.Models.Group>
+
+@{
+    ViewBag.Title = "Groups";
+}
+
+<div class="pull-right">
+    <a class="btn btn-secondary" href="/admin/groups/import">Bulk Import</a>
+    <a class="btn btn-primary" href="/admin/groups/create">Create New</a>
+</div>
+
+<h2>@ViewBag.Title</h2>
+<br />
+
+<table class="table table-sm table-striped">
+    <tr>
+        <th width="60%">@Html.DisplayNameFor(model => model.Name)</th>
+        <th width="7%">Corp</th>
+        <th width="8%">@Html.DisplayNameFor(model => model.Theatre)</th>
+        <th width="9%">@Html.DisplayNameFor(model => model.Brigade)</th>
+        <th>Designation</th>
+        <th>Status</th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                <a href="@Url.Action("Set", "Groups", new {id = item.Id})">
+                    <i class="fa fa-users" aria-hidden="true"></i> &nbsp;
+                    <strong>@Html.DisplayFor(modelItem => item.Name)</strong>
+                </a>
+            </td>
+            <td>@item.SignalCorp</td>
+            <td>@item.Theatre</td>
+            <td>@item.Brigade</td>
+            <td>(@item.Designation)</td>
+            <td>
+                @item.Status
+            </td>
+        </tr>
+    }
+
+</table>

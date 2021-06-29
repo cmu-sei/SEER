@@ -1,0 +1,67 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model IEnumerable<Seer.Infrastructure.Models.User>
+
+@{
+    ViewBag.Title = "Users";
+}
+
+
+<div class="pull-right">
+    <a class="btn btn-secondary" href="/admin/users/import">Bulk Import</a>
+    <a class="btn btn-primary" href="/admin/users/create">Create New</a>
+</div>
+
+
+<h2>@ViewBag.Title</h2>
+<br />
+
+<input type="text" id="search" class="form-control" autocomplete="off" placeholder="Search" />
+<br />
+<br />
+
+<table class="table table-sm table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Username</th>
+            <th class="text-right">Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="4">Please enter a search term</td>
+        </tr>
+    </tbody>
+</table>
+
+@section scripts {
+<script>
+    $("#search").keyup(function () {
+        let search = $("#search").val();
+        if (search.length > 0) {
+            $.post("/admin/users/search", { q: search }, function (result) {
+                //console.log(result);
+                $('.table > tbody:last-child').empty();
+                $.each(result, function (index, value) {
+                    let row = '<tr><td><a href="/admin/users/' + value.id + '"><i class="fa fa-user" aria-hidden="true"></i> &nbsp;<strong>' + value.name +
+                        '</strong></a></td><td><a href="/admin/users/' + value.id + '">' + value.email + '</a></td><td>' +
+                        value.username + '</td><td class="text-right">' + value.created + '</td></tr>';
+                    $('.table > tbody:last-child').append(row);
+                });
+            });
+        }
+    });
+</script>
+}

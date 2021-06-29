@@ -1,0 +1,84 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Models
+@model Seer.Infrastructure.ViewModels.TaskingViewModel
+
+@section scripts{
+<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script src="~/scripts/players/tasks.js"></script>
+}
+
+<h2><i class="fa fa-download" aria-hidden="true"></i> Tasking Orders</h2>
+<br />
+
+@if (!Model.Items.Any())
+{
+    <p>No tasking orders found</p>
+}
+
+<table class="table table-striped">
+    @foreach (var item in Model.Items)
+    {
+        var checkA = string.Empty;
+        var details = string.Empty;
+        var result = Model.Results.LastOrDefault(o => o.TaskingItemId == item.Id && o.Type == TaskingItemResult.TaskingItemType.UserEntered);
+        if (result != null)
+        {
+            if (result.IsComplete)
+            {
+                checkA = "checked=\"checked\"";
+            }
+            details = result.Comment;
+        }
+        <tr>
+            <td>
+                <input type="checkbox" id="@("chk-" + item.Id)" class="option big-checkbox" @checkA />
+            </td>
+            <td>
+                <h4>@item.Index. @Html.Raw(item.Description.Replace("\n", "<br/>"))</h4>
+
+                @if (item.TaskingItemDocuments.Any())
+                {
+                    <br />
+                    <br />
+                    <h5>Associated documents</h5>
+                }
+
+                <div>
+                    <br />
+                    <h5>Comments</h5>
+                    <textarea class="form-control option" id="@("txt-" + item.Id)">@details</textarea>
+                </div>
+                @if (item.TaskingItemResults != null && item.TaskingItemResults.Any(o => o.Type == TaskingItemResult.TaskingItemType.SystemEntered))
+                {
+                    <br />
+                    <div class="alert alert-info">
+                        @foreach (var r in item.TaskingItemResults.Where(o => o.Type == TaskingItemResult.TaskingItemType.SystemEntered))
+                        {
+                            <div>@r.Comment</div>
+                        }
+                    </div>
+                }
+            </td>
+        </tr>
+
+    }
+</table>
+<input type="hidden" id="groupid" value="@Model.GroupId" />
+<style>
+    .big-checkbox {
+        width: 20px;
+        height: 20px;
+        margin: 4px 0 0 4px
+    }
+</style>

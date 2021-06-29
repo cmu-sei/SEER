@@ -1,0 +1,160 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Models
+@model Seer.Infrastructure.Models.Survey
+
+@section header
+{
+<style>
+    .disabled {
+        color: #a9a9a9 !important
+    }
+
+    @@media print {
+        .navbar {
+            display: none;
+        }
+
+        * {
+            overflow: hidden !important;
+        }
+
+        script {
+            display: none
+        }
+    }
+</style>
+}
+
+@section scripts{
+<script src="~/scripts/Chart.min.js"></script>
+<script>
+    $(function () {
+        $(".graph").each(function (i, v) {
+            chartIt(this.id);
+            console.log(this.id);
+        });
+
+        function chartIt(id) {
+            let keys = [];
+            let values = [];
+
+            $("." + id).each(function () {
+                keys.push($(this).attr("data-key"));
+                values.push($(this).attr("data-value"));
+            });
+
+            let ctx = document.getElementById(id).getContext('2d');
+            let myChart = new Chart(ctx,
+                {
+                    type: 'horizontalBar',
+                    data: {
+                        labels: keys,
+                        datasets: [
+                            {
+                                backgroundColor: ["red", "pink", "gold", "limegreen", "green"],
+                                data: values
+                            }
+                        ]
+                    },
+                    options: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                });
+        }
+    });
+</script>
+}
+
+@{
+    decimal overall = 0;
+    decimal totalQuestions = Model.Questions.Count(o => o.Type == SurveyQuestion.SurveyQuestionType.MultipleChoice);
+    if (Model.Questions.Count > 0)
+    {
+        foreach (var question in Model.Questions)
+        {
+            decimal totalScore = 0;
+            decimal totalEntries = 0;
+            foreach (var option in question.GetOptions())
+            {
+                foreach (var _ in question.Answers.Where(o => o.AnsweredIndex == option.OptionNumber))
+                {
+                    totalScore += option.OptionNumber;
+                    totalEntries++;
+                }
+            }
+            {
+                if (totalEntries > 0)
+                {
+                    overall += totalScore / totalEntries;
+                }
+            }
+
+        }
+        overall /= totalQuestions;
+    }
+}
+
+<h2 class="pull-right">Overall: <span class="badge badge-default" style="border-color: silver; background-color: silver; color:black !important">@overall.ToString("0.00")</span></h2>
+<h2>@Model.Name (@ViewBag.GroupName)</h2>
+
+@foreach (var question in Model.Questions)
+{
+    <hr />
+    <div>
+    <strong>@Html.Raw(question.Body)</strong>
+</div>
+    if (question.Type == SurveyQuestion.SurveyQuestionType.MultipleChoice)
+    {
+        <div class="pull-right" style="margin: 10px 20px 20px 0;">
+    <canvas class="graph" id="graph-@question.Id" width="480" height="120"></canvas>
+</div>
+        decimal totalScore = 0;
+        decimal totalEntries = 0;
+        foreach (var option in question.GetOptions())
+        {
+            var i = 0;
+            foreach (var answer in question.Answers.Where(o => o.AnsweredIndex == option.OptionNumber))
+            {
+                i++;
+                <div>@answer.AnsweredText</div>
+                totalScore += option.OptionNumber;
+                totalEntries++;
+            }
+
+            <div class="graph-@question.Id" data-key="@option.Option" data-value="@i">@option.Option (@i)</div>
+        }
+        <br />
+
+        {
+            decimal avg = 0;
+            if (totalEntries > 0)
+            {
+                avg = totalScore / totalEntries;
+            }
+            <div>
+    <strong>Average: @avg.ToString("0.00")</strong>
+</div>
+        }
+
+    }
+    else
+    {
+        foreach (var q in question.Answers)
+        {
+            <div>@q.AnsweredText</div>
+        }
+    }
+}

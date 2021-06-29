@@ -1,0 +1,148 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Enums
+@model Seer.Infrastructure.ViewModels.GroupViewModel
+
+@using (Html.BeginForm())
+{
+    <div class="pull-right">
+    <a href="/admin/groups">Back to List</a> &nbsp; <input type="submit" value="Save" class="btn btn-primary" />
+</div>
+    <h2>Edit Group @Model.Group.Name</h2>
+    <br />
+
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(model => model.Group.Id)
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Group.Name, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Group.Name, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Group.Name, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Group.Designation, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Group.Designation, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Group.Designation, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Group.Brigade, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Group.Brigade, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Group.Brigade, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Group.Theatre, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Group.Theatre, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Group.Theatre, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Group.SignalCorp, new { @class = "control-label col-md-2" })
+        <div>
+            @Html.EditorFor(model => model.Group.SignalCorp, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Group.SignalCorp, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Group.Status, new { @class = "control-label col-md-2" })
+        <div>
+
+            <select name="Group.Status" class="form-control">
+                <option value="0" @if (Model.Group.Status == ActiveStatus.Inactive) {<text>selected='selected'</text>}>Inactive</option>
+                <option value="1" @if (Model.Group.Status == ActiveStatus.Active) {<text>selected='selected'</text>}>Active</option>
+            </select>
+        </div>
+    </div>
+    <br />
+    <div class="form-group">
+        <div>
+            <h3>This group has the following events:</h3>
+            <br />
+            @if (Model.Assessments.Count < 1)
+                {
+                    <p>There are no events associated with this group</p>
+                    <br />
+                }
+                else
+                {
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th width="25%">Name</th>
+                                <th>Status</th>
+                                <th class="text-right">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var o in Model.Assessments)
+                            {
+                                <tr>
+                                    <td><a href="@Url.Action("Set", "Assessments", new {id = o.Id})">@o.Name</a></td>
+                                    <td>@o.Status</td>
+                                    <td class="text-right">@o.Created</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+        <br />
+        <div class="form-group">
+            <div>
+                <h3>This group has the following users:</h3>
+                <br />
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th width="25%">Name</th>
+                            <th>Email</th>
+                            <th>Username</th>
+                            <th class="text-right">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var o in Model.Users)
+                        {
+                            <tr>
+                                <td><a href="@Url.Action("Edit", "Users", new { id = o.Id })">@o.FirstName @o.LastName</a></td>
+                                <td>@o.Email</td>
+                                <td>@o.UserName</td>
+                                <td class="text-right">@o.Created</td>
+                            </tr>
+
+                        }
+                    </tbody>
+                </table>
+                @if (Model.Users.Count < 1)
+                {
+                    <div>There are no users associated with this group</div>
+                }
+            </div>
+        </div>
+    </div>
+}

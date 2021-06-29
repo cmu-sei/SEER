@@ -1,0 +1,118 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Models
+@model Seer.Infrastructure.Models.AssessmentTime
+
+
+<h2>Elapsed Event Time for @ViewBag.AssessmentName</h2>
+<hr />
+<br />
+
+@{
+    ViewBag.Title = "Timer";
+
+    if (Model == null)
+    {
+        <div>Sorry, but the timer has not been configured for this event</div>
+        return;
+    }
+
+    var s = "alert ";
+    var st = Model.Status.ToString();
+    if (Model.Status == AssessmentTime.ExerciseTimeStatus.NotStarted)
+    {
+        st = "Not Started";
+    }
+    if (Model.Status == AssessmentTime.ExerciseTimeStatus.Active)
+    {
+        s += "alert-success";
+    }
+    else
+    {
+        s += "alert-warning";
+    }
+}
+<div>
+    <div id="statusbar" class="@s" style="font-size:125%;">
+        @st
+    </div>
+    <div>
+        <div id="timer">
+            Loading...
+        </div>
+    </div>
+</div>
+<input type="hidden" id="elapsed" value="@Model.ElapsedTime" />
+<input type="hidden" id="status" value="@Model.Status" />
+
+@section scripts{
+<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script>
+    $(function () {
+        let isSet = false;
+
+        let hub = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/time?assessmentid=" + @ViewBag.AssessmentId)
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        hub.on("Time",
+            function (s, e) {
+                if ($("#status").html() != s) {
+                    $("#statusbar").removeClass("alert-success");
+                    $("#statusbar").removeClass("alert-warning");
+
+                    if (s === "Active") {
+                        $("#statusbar").addClass("alert-success");
+                    } else {
+                        $("#statusbar").addClass("alert-warning");
+                    }
+                }
+                $("#status").val(s);
+                $("#statusbar").html(s);
+                $("#elapsed").val(e);
+            });
+
+        $("#status").change(function () {
+            hub.invoke('Time', null, -1);
+        });
+
+        setInterval(countTimer, 1000);
+
+        let totalSeconds = $("#elapsed").val();
+        console.log(totalSeconds);
+
+        hub.logging = true;
+        hub.start().catch(err => console.error(err.toString()));
+
+        function countTimer() {
+            ++totalSeconds;
+            let hour = Math.round(Math.floor(totalSeconds / 3600));
+            let minute = Math.round(Math.floor((totalSeconds - hour * 3600) / 60));
+            let seconds = Math.round(totalSeconds - (hour * 3600 + minute * 60));
+            if (seconds === 1) { seconds = 0; }
+
+            if ($("#status").val() === "Active" || !isSet) {
+                $("#timer").html(pad(hour) + ":" + pad(minute) + ":" + pad(seconds));
+                isSet = true;
+            }
+        }
+        function pad(val) { return val > 9 ? val : "0" + val; }
+    });
+</script>
+}
+<style>
+    #timer {
+        font-size: 10em
+    }
+</style>

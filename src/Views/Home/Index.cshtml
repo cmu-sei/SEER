@@ -1,0 +1,70 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model Seer.Infrastructure.ViewModels.HomeViewModel
+@using Seer.Infrastructure.Enums
+
+<style>
+    .card-columns {
+        column-count: 2;
+    }
+
+    .card * {
+        text-align: left;
+    }
+</style>
+
+@if (this.User.Identity.IsAuthenticated)
+{
+    if (Model.Groups.Any())
+    {
+        <h3>
+    <i class="fa fa-check-circle" aria-hidden="true"></i>
+    You are enrolled in the following assessments as a participant:
+</h3>
+        <p>
+    Click on the active event of your choice below in order to begin. Check with your administrator regarding updates for currently inactive events.
+</p>
+        <div class="card-columns">
+    @foreach (var group in Model.Groups)
+            {
+                foreach (var assessment in group.Assessments)
+                {
+                    var style = "primary";
+                    if (assessment.Status == Seer.Infrastructure.Enums.ActiveStatus.Inactive)
+                    {
+                        style = "secondary";
+                    }
+
+                    <div class="card">
+                        <a href="@Url.Action("SetAssessment", "Home", new {id = assessment.Id})" class="btn btn-block btn-@style">
+                            <i class="fa fa-play-circle" aria-hidden="true"></i>
+                            EO: <strong>@group.Name - @assessment.Name</strong> (@assessment.Status)
+                        </a>
+                    </div>
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <div style="margin:20px 0">
+    <strong>You are not enrolled in any event currently</strong>
+</div>
+    }
+}
+else
+{
+    <p>
+    Please <a href="@Url.Action("Login", "Account")">Login</a> to continue.
+</p>
+}

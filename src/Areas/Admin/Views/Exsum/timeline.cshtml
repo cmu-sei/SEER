@@ -1,0 +1,59 @@
+@*
+  SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+  Copyright 2021 Carnegie Mellon University.
+  NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+  BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+  TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+  Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+  [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+  Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+  DM21-0384
+*@
+
+@{
+  Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8" />
+<title>Exercise Timeline</title>
+<link rel="stylesheet" type="text/css" href="/scripts/admin/timeline/inspector.css" />
+<style>
+  * {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  }
+
+  select,
+  .observablehq--inspect,
+  form,
+  #choose-a-label-arrangement- {
+    display: none;
+  }
+</style>
+
+<body>
+  <div style="float:right;margin: 12px 5px 0 0;font-size: small;">
+    Views: <a href="?view=">Full</a> | <a href="?view=summary">Summary</a>
+  </div>
+  <h1>
+    <i class="fas fa-eye"></i> @ViewBag.GroupName @ViewBag.AssessmentName Exercise Timeline
+  </h1>
+  <div class="spinner-border spinner-border-sm" role="status" id="spinner">
+    <span class="sr-only">Loading...</span>
+  </div>
+
+  <script type="module">
+    import define from '/scripts/admin/timeline/index.js?x=@Guid.NewGuid()';
+    import { Runtime, Library, Inspector } from '/scripts/admin/timeline/runtime.js?x=@Guid.NewGuid()';
+
+    const runtime = new Runtime();
+    const main = runtime.module(define, Inspector.into(document.body));
+
+    setTimeout(function () {
+      document.getElementById("spinner").style.visibility = "hidden";
+    }, 3000);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Enums
+@using Seer.Infrastructure.Extensions
+@using Seer.Infrastructure.Models
+@model IEnumerable<Seer.Infrastructure.ViewModels.EventHistoryTableItem>
+
+@{
+    ViewBag.Title = "Event History";
+}
+
+<style>
+    .matching div {
+        margin-bottom: 1px;
+    }
+</style>
+
+<h2>Event History</h2>
+
+<div class="form-group">
+    Below are history events matching the selected assessment and that its timeline events:
+    <select id="assessmentid" name="assessmentid" class="form-control" style="max-width:400px;display: inline">
+        <option value="-1">Unmatched Events</option>
+    </select>
+</div>
+
+@if (!Model.Any())
+{
+    <br />
+    <div class="alert alert-info">No history events found</div>
+    <br />
+}
+
+<table class="table table-sm table-striped small" id="deployment_timeline">
+    <thead>
+        <tr>
+            <th width="1%" class="al">ID</th>
+            <th width="1%">Created</th>
+            <th>Title</th>
+            <th width="200">Matching</th>
+            <th width="1%" class="ac"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td nowrap="nowrap">@item.Created Z</td>
+                <td>@item.Message.BreakUpLongStrings(15)</td>
+                <td class="matching">
+                    <div>
+                        <select class="assessments form-control form-control-sm" data-id="@item.Id" data-default="@item.AssessmentId">
+                            <option>Assign to Assessment...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select class="events form-control form-control-sm" data-id="@item.Id" data-default="@item.EventId">
+                            <option>Assign to Specific Event...</option>
+                        </select>
+                    </div>
+                    <div>
+                        @Html.DropDownList("Status", Html.GetEnumSelectList<EventDetailHistory.EventHistoryStatus>(),
+                    item.Status.DisplayName(), new { @class = "form-control form-control-sm" })
+                    </div>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-primary save" data-id="@item.Id">Save</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section scripts {
+<script>
+    $(function () {
+        $.getJSON('/api/groups', function (group_data) {
+            $.getJSON('/api/assessments', function (data) {
+                $('#assessmentid').each(function () {
+                    let urlParams = new URLSearchParams(window.location.search);
+                    let current = parseInt(urlParams.get('assessmentid'));
+                    let selected = "";
+                    $.each(data, function (k, v) {
+                        let group_name = "";
+                        $.each(group_data, function (gk, gv) {
+                            if (v.groupId === gv.id) {
+                                group_name = gv.name;
+                            }
+                        });
+                        if (current === v.id) {
+                            selected = " selected='selected'";
+                        } else {
+                            selected = "";
+                        }
+                        $('#assessmentid').append("<option value='" + v.id + "'" + selected + ">" + group_name + " " + v.name + "</option>");
+                    });
+                }),
+                    $('.assessments').each(function () {
+                        let x = $(this);
+                        let d = x.data("default");
+                        let itemId = x.data("id");
+                        $.each(data, function (k, v) {
+                            let group_name = "";
+                            $.each(group_data, function (gk, gv) {
+                                if (v.groupId === gv.id) {
+                                    group_name = gv.name;
+                                }
+                            });
+                            let selected = "";
+                            if (d === v.id) {
+                                selected = " selected='selected'";
+                                loadEvents(itemId, v.id);
+                            } else {
+                                selected = "";
+                            }
+                            x.append("<option value='" + v.id + "'" + selected + ">" + group_name + " " + v.name + "</option>");
+                        })
+                    })
+            });
+        });
+
+        $("#assessmentid").change(function () {
+            window.location.replace("eventhistory?assessmentid=" + $("#assessmentid").val());
+        });
+
+        $(".assessments").change(function () {
+            let assessmentControl = $(this);
+            let itemId = assessmentControl.data("id");
+            loadEvents(itemId, assessmentControl.val());
+        });
+
+        function loadEvents(itemId, assessmentId) {
+            $('.events').each(function () {
+                let e = $(this)
+                let d = e.data("default");
+                if (e.data("id") === itemId) {
+                    e.empty();
+                    e.append("<option>Assign to specfic event...</option>")
+                    $.getJSON('/api/seer/assessments/' + assessmentId + '/events', function (assessment_events) {
+                        //console.log(assessment_events)
+                        let selected = "";
+                        $.each(assessment_events, function (k, v) {
+                            if (d === v.id) {
+                                selected = " selected='selected'";
+                            } else {
+                                selected = "";
+                            }
+                            e.append("<option value='" + v.id + "'" + selected + ">" + v.name + "</option>");
+                        });
+                    });
+                }
+            });
+        }
+
+        $(".save").click(function () {
+            let itemId = $(this).data("id");
+            let assessmentId = null;
+            let eventId = -1;
+            $('.assessments').each(function () {
+                if ($(this).data("id") === itemId) {
+                    assessmentId = $(this).val();
+                }
+            });
+            $('.events').each(function () {
+                if ($(this).data("id") === itemId) {
+                    eventId = $(this).val();
+                }
+            });
+            let arr = { Id: itemId, AssessmentId: Number(assessmentId), EventId: Number(eventId) };
+            $.ajax({
+                url: "/api/eventhistory/associate",
+                type: 'POST',
+                data: JSON.stringify(arr),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: false,
+                success: function () {
+                    location.reload();
+                }
+            });
+        });
+    });
+</script>
+}

@@ -1,0 +1,236 @@
+@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Models
+@model Seer.Infrastructure.Models.AssessmentEventCatalogItem
+
+@{
+    ViewBag.Title = "Inject Catalog";
+    var newItemDetail = new AssessmentEventCatalogItemDetail { DisplayOrder = 1 };
+}
+
+<h2>Edit FAQ Item</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new {@class = "text-danger"})
+    @Html.HiddenFor(model => model.Id)
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Name, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Name, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.Name, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.ExtendedName, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.ExtendedName, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.ExtendedName, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.ExecutiveSummary, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.ExecutiveSummary, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.ExecutiveSummary, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.Storyline, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Storyline, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.Storyline, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.TargetedSystems, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.TargetedSystems, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.TargetedSystems, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.Detection, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Detection, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.Detection, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.AnticipatedResponse, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.AnticipatedResponse, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.AnticipatedResponse, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.Organization, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Organization, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.Organization, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.Intel, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Intel, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.Intel, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.TechnicalDetails, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.TechnicalDetails, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.TechnicalDetails, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.Owner, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Owner, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.Owner, "", new {@class = "text-danger"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.Created, new {@class = "control-label col-md-2"})
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Created, new {htmlAttributes = new {@class = "form-control"}})
+            @Html.ValidationMessageFor(model => model.Created, "", new {@class = "text-danger"})
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Save" class="btn btn-primary" /> &nbsp; @Html.ActionLink("Back to List", "Index")
+        </div>
+    </div>
+</div>
+}
+@if (Model.Id > 0)
+{
+    <hr />
+    <h2>Item Events</h2><a id="events"></a>
+    <table class="table table-info table-condensed col-sm-10" style="margin-left:15px">
+    <thead>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Procedures</th>
+        <th>Attack Profile</th>
+        <th>Display Order</th>
+        <th>&nbsp;</th>
+    </thead>
+    <tbody>
+
+        @foreach (var detail in Model.Details.OrderBy(x => x.DisplayOrder))
+            {
+                <form action="/admin/catalog/@Model.Id/details/@detail.Id?g=/admin/catalog/@Model.Id#events" method="POST">
+                    <tr>
+                        <td>
+                            <input type="text" disabled="disabled" value="@detail.Id" name="view_Id" class="form-control" />
+                            <input type="hidden" value="@detail.Id" name="Id" />
+                            <input type="hidden" value="@detail.AssessmentEventCatalogItemId" name="AssessmentEventCatalogItemId" />
+                        </td>
+                        <td>
+                            <input class="form-control" name="Name" type="text" value="@detail.Name" />
+                        </td>
+                        <td>
+                            <input class="form-control" name="Procedures" type="text" value="@detail.Procedures" />
+                        </td>
+                        <td>
+                            <input class="form-control" name="AttackProfile" type="text" value="@detail.AttackProfile" />
+                        </td>
+                        <td>
+                            <input class="form-control text-box single-line" data-val="true" data-val-required="The Display Order field is required." name="DisplayOrder" type="number" value="@detail.DisplayOrder">
+                            <span class="field-validation-valid text-danger" data-valmsg-for="newItemDetail.DisplayOrder" data-valmsg-replace="true"></span>
+                        </td>
+                        <td style="vertical-align: middle">
+                            <button class="btn-link" type="submit" title="Save Changes to Item Detail">
+                                <i class="fas fa-save"></i>
+                            </button>
+                            &nbsp;
+                            <a href="#" title="Delete Item Detail" data-href="/admin/catalog/@Model.Id/details/@detail.Id/delete?g=/admin/catalog/@Model.Id#events" data-toggle="modal" data-target="#confirm-delete">
+                                <i class="fa fa-trash"></i>
+                            </a>
+
+                        </td>
+                    </tr>
+                </form>
+                newItemDetail.DisplayOrder++;
+            }
+            <form action="/admin/catalog/@Model.Id/details?g=/admin/catalog/@Model.Id#events" method="POST">
+                @Html.AntiForgeryToken()
+                <tr>
+                    <td>
+                        <input type="text" disabled="disabled" value="[Auto assigned]" class="form-control" />
+                    </td>
+                    <td>
+                        <input class="form-control" name="Name" type="text" value="" placeholder="Event Name" />
+                    </td>
+                    <td>
+                        <input class="form-control" name="Procedures" type="text" value="" placeholder="Event Procedures" />
+                    </td>
+                    <td>
+                        <input class="form-control" name="AttackProfile" type="text" value="" placeholder="Attack Profile" />
+                    </td>
+                    <td>
+                        <input class="form-control text-box single-line" data-val="true" data-val-required="The Display Order field is required." name="DisplayOrder" type="number" value="@newItemDetail.DisplayOrder">
+                        <span class="field-validation-valid text-danger" data-valmsg-for="newItemDetail.DisplayOrder" data-valmsg-replace="true"></span>
+                    </td>
+                    <td style="vertical-align: middle; text-align: right">
+                        <button class="btn btn-link" type="submit" title="Add New Item Detail">
+                            <i class="fas fa-plus-circle"></i>
+                        </button>
+                    </td>
+                </tr>
+            </form>
+        </tbody>
+    </table>
+}
+<style>
+    h2 {
+        margin-bottom: 30px;
+    }
+</style>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Delete
+            </div>
+            <div class="modal-body">
+                Are you sure you want to permanently delete this event from the inject?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <form action="#" method="POST" id="delete_form">
+                    <button class="btn btn-danger btn-ok" type="submit">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    $(function () {
+        $('#confirm-delete').on('show.bs.modal', function (e) {
+            $(this).find('#delete_form').attr('action', $(e.relatedTarget).data('href'));
+        });
+    });
+</script>
+}

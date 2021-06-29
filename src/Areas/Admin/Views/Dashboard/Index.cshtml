@@ -1,0 +1,138 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model Seer.Areas.Admin.ViewModels.DashboardViewModel
+@{
+    ViewBag.Title = "Administration Dashboard";
+}
+
+<style>
+    .fa {
+        width: 20px !important;
+        text-align: center !important;
+    }
+
+    .i1 {
+        padding-left: 40px;
+    }
+
+    .i1-a {
+        padding-left: 47px;
+    }
+
+    .i2 {
+        padding-left: 90px;
+    }
+
+    .i2-a {
+        padding-left: 75px;
+    }
+
+    .i3 {
+        padding-left: 95px;
+    }
+
+    .i4 {
+        padding-left: 92px;
+    }
+</style>
+
+<h2>@ViewBag.Title</h2>
+
+<div class="row">
+    <div class="col-sm-12">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item list-group-item-action bold">
+                <a href="/admin/users" title="Users are part of groups that then participate in evaluations">
+                    <i class="fa fa-user-circle" aria-hidden="true"></i> Users
+                </a>
+            </li>
+            <li class="list-group-item list-group-item-action i1">
+                <a href="/admin/groups" title="These entities join quizzes to groups of users that will take them" class="bold">
+                    <i class="fa fa-users" aria-hidden="true"></i> Groups
+                </a>
+            </li>
+            <div id="c_g" class=" " style="width:100%; border-bottom-width: 0;">
+                @foreach (var group in Model.Groups)
+                {
+                    <li class="list-group-item list-group-item-action i2">
+                        <a href="@Url.Action("Set","Groups", new {id=group.Id})">
+                            @group.Name
+                        </a>
+                    </li>
+                }
+            </div>
+            <li class="list-group-item list-group-item-action bold">
+                <a href="@Url.Action("Index","Campaigns")">
+                    <i class="fa fa-globe" aria-hidden="true"></i> Campaigns
+                </a>
+            </li>
+            @{
+                foreach (var campaign in Model.Campaigns)
+                {
+                    <li class="list-group-item list-group-item-action i1-a">
+                        <a href="@Url.Action("Edit","Campaigns", new {id=campaign.Id})">
+                            @campaign.Name
+                        </a>
+                    </li>
+                    if (campaign.Operations.Count > 0)
+                    {
+                        <li class="list-group-item list-group-item-action bold">
+                            <a href="/admin/campaigns/@campaign.Id/operations">
+                                <i class="fa fa-map-marked-alt" aria-hidden="true"></i> Operations
+                            </a>
+                        </li>
+                        foreach (var operation in campaign.Operations)
+                        {
+                            <li class="list-group-item list-group-item-action i1">
+                                <a href="/admin/campaigns/@campaign.Id/operations/@operation.Id">@operation.Name</a>
+                            </li>
+                            <div id="c_@operation.Id" style="width:100%; border-bottom-width: 0;">
+                                <li class="list-group-item list-group-item-action i2-a bold">
+                                    <i class="fa fa-check-double" aria-hidden="true"></i> Assessments
+                                </li>
+                                @foreach (var assessment in operation.Assessments)
+                                {
+                                    <li class="list-group-item list-group-item-action i3">
+                                        <a href="/admin/assessments/@assessment.Id/set">
+                                            <i class="fa fa-check" aria-hidden="true"></i> @assessment.Name
+                                            @{
+                                                var g = Model.Groups.FirstOrDefault(o => o.Id == assessment.GroupId);
+                                                if (g != null)
+                                                {
+                                                    <span>(with @g.Name)</span>
+                                                }
+                                            }
+                                        </a>
+                                    </li>
+                                    if (assessment.Quizzes.Any())
+                                    {
+                                        <li class="list-group-item list-group-item-action i4">
+                                            @foreach (var quiz in assessment.Quizzes)
+                                            {
+                                                <div style="padding-left:30px;">
+                                                    <a href="/admin/assessments/@assessment.Id/set?g=/admin/questions/@quiz.Id">
+                                                        @quiz.Name
+                                                    </a>
+                                                </div>
+                                            }
+                                        </li>
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+                }
+            }
+        </ul>
+    </div>
+</div>

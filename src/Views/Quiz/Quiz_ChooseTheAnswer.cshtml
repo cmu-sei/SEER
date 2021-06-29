@@ -1,0 +1,47 @@
+﻿@model Seer.Infrastructure.Models.QuizQuestion
+@using Seer.Infrastructure.Models
+
+<br />
+<h3>
+    @(Model.Index).
+    @Html.Raw(Model.Body)
+    @if (!string.IsNullOrEmpty(Model.Hint) && !Model.HintTaken)
+    {
+        <button class="btn btn-sm btn-secondary hint" id="hint-show-@Model.Id">Show Hint</button>
+    }
+</h3>
+
+<div class="well well-small">
+    @if (Model.Type == QuizQuestion.QuestionType.Text)
+    {
+        <div class="options">
+            <input type="text" class="option form-control col-sm-5" name="@Model.Id" id="@("text-" + Model.Id)" style="display:inline;" value="@Model.AnsweredText" />
+            <span class="slot @("slot" + Model.Id)" id="@("slot-" + Model.Id + "-0")">@Model.AnsweredBy</span>
+        </div>
+    }
+    else
+    {
+        foreach (var option in Model.GetOptions())
+        {
+            <div class="options">
+                <input type="radio" class="option" name="@Model.Id" value="@option.OptionNumber" id="@("option-" + Model.Id + "-" + option.OptionNumber)"
+                       @if (Model.AnsweredIndex == option.OptionNumber) { <text> checked="checked" </text>   } />
+                <label for="@("option-" + Model.Id + "-" + option.OptionNumber)">
+                    @option.Option
+                    @if (string.IsNullOrEmpty(option.OptionImage) == false)
+                    {
+                        <img src="@option.OptionImage" alt="Option Image" />
+                    }
+                </label>
+                <span class="slot @("slot" + Model.Id)" id="@("slot-" + Model.Id + "-" + option.OptionNumber)">
+                    @if (Model.AnsweredIndex == option.OptionNumber)
+                    {
+                        <text>@Model.AnsweredBy</text>
+                    }
+                </span>
+            </div>
+        }
+    }
+    <div id="hint-@Model.Id" class="hint-text" @if (!Model.HintTaken) { <text> style="display:none" </text> }>@if (Model.HintTaken)
+    {@Model.Hint}</div>
+</div>

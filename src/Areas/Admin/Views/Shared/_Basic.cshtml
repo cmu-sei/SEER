@@ -1,0 +1,66 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="google" value="notranslate">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="icon" type="image/ico" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <title>@ViewBag.Title</title>
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/core.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/resizable.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/selectable.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/accordion.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/autocomplete.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/button.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/dialog.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/slider.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/datepicker.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/progressbar.css" />
+    <link rel="stylesheet" type="text/css" href="/content/themes/base/theme.css" />
+    <link rel="stylesheet" type="text/css" href="/content/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/content/bootstrap-grid.min.css" />
+    <link rel="stylesheet" type="text/css" href="/content/bootstrap-utilities.min.css" />
+    <link rel="stylesheet" type="text/css" href="/content/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" type="text/css" href="/content/fontawesome/css/all.css" />
+    <link rel="stylesheet" type="text/css" href="/content/site.css" />
+    @await RenderSectionAsync("header", false)
+</head>
+
+<body class="@ViewBag.BodyCssClass">
+    @await RenderSectionAsync("jumbotron", false)
+    <div class="container">
+        @RenderBody()
+        @await Html.PartialAsync("_Footer")
+    </div>
+
+    <script src="/scripts/jquery-3.1.1.js"></script>
+    <script src="/scripts/jquery.signalR-2.2.2.js"></script>
+    <script src="/scripts/jquery-ui-1.12.1.js"></script>
+    <script src="/scripts/jquery.unobtrusive-ajax.js"></script>
+    <script src="/scripts/jquery.validate.js"></script>
+    <script src="/scripts/modernizr-2.8.3.js"></script>
+    <script src="/scripts/tether.js"></script>
+    <script src="/scripts/moment.js"></script>
+    <script src="/scripts/bootstrap.min.js"></script>
+
+    <script src="/scripts/_Layout.js"></script>
+    @await RenderSectionAsync("scripts", false)
+</body>
+
+</html>

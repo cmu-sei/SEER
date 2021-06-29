@@ -1,0 +1,63 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model Seer.Infrastructure.Models.QuizQuestion
+@using Seer.Infrastructure.Enums
+@using Seer.Infrastructure.Models
+
+<br />
+<div class="list-group">
+    <div class="list-group-item list-group-item-action flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">
+                @Html.DisplayNameFor(model => model.Body) @Model.Index:
+                @Html.Raw(Model.Body)
+            </h5>
+            <small>
+                Created: @Model.Created
+            </small>
+        </div>
+        <small>
+            @Model.Type.DisplayName()
+        </small>
+    </div>
+    @if (Model.Type == QuizQuestion.QuestionType.Text)
+    {
+        <div class="list-group-item list-group-item-action flex-column align-items-start list-group-item-success">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">@Model.CorrectText</h5>
+            </div>
+        </div>
+    }
+    else
+    {
+        foreach (var option in Model.GetOptions())
+        {
+            <div class="list-group-item list-group-item-action flex-column align-items-start @(option.OptionNumber.Equals(Model.CorrectIndex) ?"list-group-item-success": "list-group-item-danger")">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">@option.Option</h5>
+                </div>
+                <img src="@option.OptionImage" class="@(string.IsNullOrEmpty(option.OptionImage) ? "no-image" : "")" alt="Option" />
+            </div>
+        }
+    }
+    <div class="list-group-item list-group-item-action flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+            <small>
+                @Html.DisplayNameFor(model => model.Comment)
+            </small>
+            <h5 class="mb-1">
+                @Html.Raw(Model.Comment) &nbsp;
+            </h5>
+        </div>
+    </div>
+</div>

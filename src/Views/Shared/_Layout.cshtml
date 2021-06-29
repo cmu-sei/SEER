@@ -1,0 +1,180 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@using Seer.Infrastructure.Models
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="google" value="notranslate">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="icon" type="image/ico" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <title>SEER</title>
+    <link rel="stylesheet" type="text/css" href="/content/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/content/fontawesome/css/all.css" />
+    <link rel="stylesheet" type="text/css" href="/content/site.css" />
+    @await RenderSectionAsync("header", false)
+</head>
+
+<body class="@ViewBag.BodyCssClass">
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <ul class="navbar-nav">
+                <li>
+                    <a class="nav-link" title="Home" href="@Url.Action("Index", "Home", new {Area = ""})">
+                        <img src="/content/images/icon.png" title="System (for) Event Evaluation Research" alt="System (for) Event Evaluation Research" class="fa" style="width:26px;margin-top: -3px" /> SEER
+                    </a>
+                </li>
+                @if (User.Identity != null && User.Identity.IsAuthenticated && ViewBag.AssessmentId != null)
+                {
+                    var conf = (Assessment.Config)ViewBag.AssessmentConfiguration;
+
+                    <li>
+                        <span class="nav-link active">|</span>
+                    </li>
+                    <li>
+                        <span class="nav-link text-warning">@ViewBag.AssessmentName &nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i></span>
+                    </li>
+                    if (conf.HasAnnouncements)
+                    {
+                        <li>
+                            <a class="nav-link active" href="@Url.Action("Index", "Announcements")">
+                                Announcements
+                            </a>
+                        </li>
+                    }
+                    if (conf.HasFaqs)
+                    {
+                        <li>
+                            <a class="nav-link active" href="@Url.Action("Index", "Faqs")">
+                                FAQs
+                            </a>
+                        </li>
+                    }
+                    if (conf.HasDocuments)
+                    {
+                        <li>
+                            <a class="nav-link active" href="@Url.Action("Index", "Documents")">
+                                Documents
+                            </a>
+                        </li>
+                    }
+                    if (conf.HasIntel)
+                    {
+                        <li>
+                            <a class="nav-link active" href="@Url.Action("Index", "Intel")">
+                                Intel
+                            </a>
+                        </li>
+                    }
+                    if (conf.HasOrders)
+                    {
+                        <li>
+                            <a class="nav-link active" href="@Url.Action("Index", "Tasks")">
+                                Orders
+                            </a>
+                        </li>
+                    }
+                    if (conf.HasQuizzes)
+                    {
+                        <li>
+                            <a class="nav-link active" href="@Url.Action("Assessment", "Home")">
+                                Quizzes
+                            </a>
+                        </li>
+                    }
+                    <li>
+                        <a class="nav-link active" href="@Url.Action("Index", "Survey")">
+                            Survey
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link active" href="@Url.Action("Index", "Time")">
+                            Timer
+                        </a>
+                    </li>
+                    if (conf.HasUploads)
+                    {
+                        <li>
+                            <a class="nav-link active" href="@Url.Action("Index", "Uploads", new {Area = ""})">
+                                Uploads
+                            </a>
+                        </li>
+                    }
+                    <li>
+                        <span class="nav-link active">|</span>
+                    </li>
+                    <li style="padding:8px 0 0 12px;">
+                        @await Html.PartialAsync("_Timer")
+                    </li>
+                }
+                <li>
+                    <a class="nav-link" href="#">&nbsp;</a>
+                </li>
+            </ul>
+        </div>
+        @if (User.Identity?.IsAuthenticated ?? true)
+        {
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="dropdown01" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                        @User.Identity?.Name?.ToLower()
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown01">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li><a class="dropdown-item" href="/admin/dashboard">
+                                    <i class="fa fa-university" aria-hidden="true"></i> Administration
+                                </a></li>
+                        }
+                        @if (User.IsInRole("EO") || User.IsInRole("Admin"))
+                        {
+                            <li><a class="dropdown-item" href="@Url.Action("Index", "Dashboard", new {Area = "EO"})">
+                                    <i class="fa fa-eye" aria-hidden="true"></i> EO Dashboard
+                                </a></li>
+                        }
+                        <li>
+                            <a class="dropdown-item" id="logout" href="@Url.Action("LogOff", "Account", new {Area = ""})">
+                                <i class="fa fa-sign-out-alt" aria-hidden="true"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        }
+    </nav>
+    @await RenderSectionAsync("jumbotron", false)
+    <div class="container-fluid main1">
+        @RenderBody()
+        @await Html.PartialAsync("_Footer")
+    </div>
+
+    <script src="/scripts/jquery-3.1.1.js"></script>
+    <script src="/scripts/jquery-ui-1.12.1.js"></script>
+    <script src="/scripts/jquery.unobtrusive-ajax.js"></script>
+    <script src="/scripts/jquery.validate.js"></script>
+    <script src="/scripts/modernizr-2.8.3.js"></script>
+    <script src="/scripts/tether.js"></script>
+    <script src="/scripts/moment.js"></script>
+    <script src="/scripts/bootstrap.min.js"></script>
+    <script src="/scripts/_Layout.js"></script>
+    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+    <script src="/scripts/players/timer.js?id=@Guid.NewGuid()"></script>
+    <input type="hidden" id="g_assessmentid" value="@ViewBag.AssessmentId" />
+    @await RenderSectionAsync("scripts", false)
+</body>
+
+</html>

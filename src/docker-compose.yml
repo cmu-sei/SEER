@@ -1,0 +1,40 @@
+version: '3.6'
+
+networks:
+  seer-network:
+    driver: bridge
+services:
+  postgres:
+    image: postgres:13.0
+    container_name: seer-postgres
+    environment:
+      POSTGRES_DB: seer
+      POSTGRES_USER: seer
+      POSTGRES_PASSWORD: Scotty@1
+    volumes:
+      - ~/data/seer/13:/var/lib/postgresql/data
+    logging:
+      options:
+        max-size: '100m'
+        max-file: '5'
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U seer']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - seer-network
+    restart: always
+
+  seer:
+    image: seer/seer
+    container_name: seer
+    #    depends_on:
+    #      - postgres
+    ports:
+      - '38080:5000'
+    networks:
+      - seer-network
+    restart: always

@@ -1,0 +1,380 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model IEnumerable<Seer.Infrastructure.Models.Quiz>
+@using Seer.Infrastructure.Models
+
+@{
+    ViewBag.Title = $"{ViewBag.GroupName} {ViewBag.AssessmentName} Quiz Report";
+    ViewBag.BodyCssClass = "bodyprint";
+    Layout = @"..\Shared\_Basic.cshtml";
+    var isCondensed = !(!string.IsNullOrEmpty(Context.Request.Query["view"]) && (Context.Request.Query["view"] == "full" || Context.Request.Query["view"] == "expanded"));
+
+    var numberOfQuestions = 0;
+    var correct = 0;
+    var incorrect = 0;
+    var unanswered = 0;
+    foreach (var quiz in Model)
+    {
+        numberOfQuestions += quiz.Questions.Count;
+        correct += quiz.Questions.Count(o => o.IsAnsweredCorrectly);
+        incorrect += quiz.Questions.Count(o => !o.IsAnsweredCorrectly && !string.IsNullOrEmpty(o.AnsweredBy) && o.AnswerStatus != QuizAnswer.AnswerStateType.NotApplicable);
+        unanswered += quiz.Questions.Count(o => !o.IsAnsweredCorrectly && string.IsNullOrEmpty(o.AnsweredBy) && o.AnswerStatus != QuizAnswer.AnswerStateType.NotApplicable);
+    }
+
+    if (numberOfQuestions > 0)
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <h1 class="display-4">@ViewBag.GroupName @ViewBag.AssessmentName Overall Metrics</h1>
+
+                <table class="table table-sm" id="overview">
+                    <tr class="table-inverse">
+                        <td>@Convert.ToInt32(Convert.ToDouble(correct) / Convert.ToDouble(numberOfQuestions) * 100)%</td>
+                        <td>@correct</td>
+                        <td>@incorrect</td>
+                        <td>@unanswered</td>
+                    </tr>
+                    <tr class="table-inverse">
+                        <th>AVG SCORE</th>
+                        <th>CORRECT</th>
+                        <th>INCORRECT</th>
+                        <th>UNANSWERED</th>
+                    </tr>
+                </table>
+
+            </div>
+        </div>
+        <br />
+        <br />
+    }
+}
+
+@foreach (var quiz in Model)
+{
+    <div class="row">
+    <div class="col-sm-12">
+        <h1 class="display-4">@ViewBag.GroupName @ViewBag.AssessmentName @quiz.Name Metrics</h1>
+
+        <table class="table table-sm" id="overview">
+            <tr class="table-info">
+                <td>@quiz.Score%</td>
+                <td>@quiz.Questions.Count(o => o.IsAnsweredCorrectly)</td>
+                <td>@quiz.Questions.Count(o => !o.IsAnsweredCorrectly && !string.IsNullOrEmpty(o.AnsweredBy) && o.AnswerStatus != QuizAnswer.AnswerStateType.NotApplicable)</td>
+                <td>@quiz.Questions.Count(o => !o.IsAnsweredCorrectly && string.IsNullOrEmpty(o.AnsweredBy) && o.AnswerStatus != QuizAnswer.AnswerStateType.NotApplicable)</td>
+            </tr>
+            <tr class="table-inverse">
+                <th>AVG SCORE</th>
+                <th>CORRECT</th>
+                <th>INCORRECT</th>
+                <th>UNANSWERED</th>
+            </tr>
+        </table>
+
+    </div>
+</div>
+
+
+    <div class="row">
+    <div class="col-sm-12">
+
+        <h3>Question Summary</h3>
+        <br />
+        <table class="table table-sm">
+            <tr>
+                <th></th>
+                <th>Question</th>
+                <th>Question Type</th>
+                <th>Correct Answer</th>
+                <th>Given Answer</th>
+                <th class="right">Answered By</th>
+                <th class="no-print">&nbsp;</th>
+            </tr>
+            @if (!quiz.Questions.Any())
+                {
+                    <tr>
+                        <td colspan="5">There are no questions for this quiz</td>
+                    </tr>
+                }
+                @foreach (var question in quiz.Questions)
+                {
+                    var questionType = "Text";
+                    var stripe = "danger";
+                    if (question.IsAnsweredCorrectly)
+                    {
+                        stripe = "success";
+                    }
+                    if (string.IsNullOrEmpty(question.AnsweredBy))
+                    {
+                        stripe = "warning";
+                    }
+                    if (question.AnswerStatus == QuizAnswer.AnswerStateType.NotApplicable)
+                    {
+                        stripe = "na";
+                    }
+                    var answerDetail = question.GetAnswerDetail();
+                    <tr class="table-@stripe" title="Question ID: @question.Id">
+                        <td>@(question.Index).</td>
+                        <td>@question.Body</td>
+                        <td>@questionType</td>
+                        <td>@answerDetail.CorrectAnswer</td>
+                        <td>@answerDetail.Answer</td>
+                        <td class="right">@question.AnsweredBy</td>
+                        <td class="right no-print">
+                            <span>
+                                @if (!question.IsAnsweredCorrectly)
+                                {
+                                    <a href="#" title="Mark Question as Correct" class="btn" data-href="/admin/questions/@question.Id/correct" data-toggle="modal" data-target="#confirm-markcorrect">
+                                        <i class="fa fa-check-circle" aria-hidden="true"></i>
+                                    </a>
+                                }
+                                <a href="#" title="Delete Question" class="btn" data-href="/admin/questions/@question.Id/delete?g=/admin/reports/print" data-toggle="modal" data-target="#confirm-delete">
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                </a>
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </table>
+
+        </div>
+
+    </div>
+
+    if (!isCondensed)
+    {
+        if (!quiz.Questions.Any())
+        {
+            <div>There are no questions for this quiz</div>
+        }
+        else
+        {
+            <br />
+            <br />
+            <h3>Question Detail</h3>
+            <hr />
+            <br />
+        }
+        foreach (var question in quiz.Questions)
+        {
+            <br />
+            var answerDetail = question.GetAnswerDetail();
+
+            <div>
+    <h4>@(question.Index). @question.Body</h4>
+</div>
+            <table class="table">
+    @if (question.Type == QuizQuestion.QuestionType.MultipleChoice)
+                {
+                    if (question.AnswerStatus == QuizAnswer.AnswerStateType.NotApplicable)
+                    {
+                        <tr class="table-na">
+                            <td class="font-weight-bold">N/A</td>
+                            <td colspan="2" class="pull-right">@question.AnsweredBy</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var ans in question.GetOptions())
+                        {
+                            if (ans.Option == answerDetail.CorrectAnswer)
+                            {
+                                if (ans.Option == answerDetail.Answer)
+                                {
+                                    <tr class="table-success">
+                                        <td class="font-weight-bold">@ans.Option</td>
+                                        <td colspan="2" class="pull-right">@question.AnsweredBy</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3" class="tco">@ans.Option</td>
+                                    </tr>
+                                }
+
+                            }
+                            else
+                            {
+                                if (ans.Option == answerDetail.Answer)
+                                {
+                                    <tr class="table-danger">
+                                        <td>@ans.Option </td>
+                                        <td colspan="2" class="pull-right">@question.AnsweredBy</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3">@ans.Option</td>
+                                    </tr>
+                                }
+
+                            }
+                        }
+                    }
+                }
+                else if (question.Type == QuizQuestion.QuestionType.Text)
+                {
+                    var stripe = string.IsNullOrEmpty(answerDetail.Answer) switch
+                    {
+                        false when answerDetail.CorrectAnswer == answerDetail.Answer => "table-success",
+                        false when answerDetail.CorrectAnswer != answerDetail.Answer => "table-danger",
+                        _ => string.Empty
+                    };
+                    if (question.AnswerStatus == QuizAnswer.AnswerStateType.NotApplicable)
+                    {
+                        stripe = "table-na";
+                        answerDetail.Answer = "N/A";
+                    }
+                    <tr class="@stripe">
+                        <td class="tco" width="50%">
+                            @question.CorrectText &nbsp;
+                        </td>
+                        <td>
+                            @answerDetail.Answer &nbsp;
+                        </td>
+                        <td class="pull-right">
+                            @question.AnsweredBy &nbsp;
+                        </td>
+                    </tr>
+                }
+            </table>
+        }
+    }
+}
+
+<style>
+    #overview td,
+    #overview th {
+        text-align: center;
+    }
+
+    #overview td {
+        font-size: 2.5em;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    .bodyprint {
+        margin: 20px 0 0 0;
+        padding: 0;
+    }
+
+    .bodyzero {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .tco {
+        color: green;
+        font-weight: bold;
+    }
+
+    .table-na,
+    .table-na * {
+        background: WhiteSmoke;
+        color: silver;
+    }
+
+    #overview td,
+    #overview th {
+        text-align: center;
+    }
+
+    #overview td {
+        font-size: 2.5em;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    .table-na * {
+        background: WhiteSmoke;
+        color: silver;
+    }
+
+    .success {
+        color: #dff0d8
+    }
+
+    .table-success td {
+        background-color: #dff0d8;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    @@media print {
+
+        .table td,
+        .table th {
+            background-color: transparent !important;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Delete
+            </div>
+            <div class="modal-body">
+                Are you sure you want to permanently delete this question?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <form action="#" method="POST" id="delete_form">
+                    <button class="btn btn-danger btn-ok" type="submit">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-markcorrect" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Marking Question as Correct
+            </div>
+            <div class="modal-body">
+                Are you sure you want to mark this question as correct?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <form action="#" method="POST" id="markcorrect_form">
+                    <button class="btn btn-danger btn-ok" type="submit">Mark Correct</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    $(function () {
+        $('#confirm-delete').on('show.bs.modal', function (e) {
+            $(this).find('#delete_form').attr('action', $(e.relatedTarget).data('href'));
+        });
+        $('#confirm-markcorrect').on('show.bs.modal', function (e) {
+            $(this).find('#markcorrect_form').attr('action', $(e.relatedTarget).data('href'));
+        });
+    });
+</script>
+}

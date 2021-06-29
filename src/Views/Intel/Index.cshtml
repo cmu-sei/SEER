@@ -1,0 +1,75 @@
+﻿@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+<div class="pull-right col-lg-7">
+    <input type="text" id="search" class="form-control" autocomplete="off" placeholder="Search" />
+</div>
+<h2>Intelligence Reports</h2>
+<br />
+
+<div id="results">
+
+    <div id="loading">
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+        <span class="sr-only">Loading...</span>
+    </div>
+
+</div>
+
+@section scripts {
+<script>
+    $(function () {
+
+        $("#search").keyup(function () {
+            var search = $("#search").val();
+            if (search.length > 2) {
+                searchEx(search);
+            }
+        });
+
+        function searchEx(search) {
+            $("#loading").show();
+            $.post("intel/search",
+                { q: search },
+                function (result) {
+                    $("#loading").hide();
+                    console.log(result);
+                    $('#results').empty();
+                    if (result.length < 1) {
+                        $('#results').append("Sorry, no results found");
+                    } else {
+                        $.each(result,
+                            function (index, item) {
+
+                                var card = '<div class="card"><div class="card-block"><h6 class="pull-right">' +
+                                    moment(parseInt(item.created.substr(6))).format('MMMM Do YYYY, h:mm:ss a UTC') +
+                                    '</h6>';
+                                card += '<h4 class="card-title font-weight-bold"><a href="/intel/' +
+                                    item.id +
+                                    '">' +
+                                    item.subject +
+                                    '</a>';
+                                card += '</h4></div>';
+                                $('#results').append(card);
+                            });
+                    }
+                });
+        }
+        searchEx(null);
+    });
+</script>
+<style>
+    .card {
+        margin-bottom: 10px;
+    }
+</style>
+}

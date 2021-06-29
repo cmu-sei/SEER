@@ -1,0 +1,263 @@
+@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model IEnumerable<Seer.Infrastructure.Models.TeamScore>
+
+@{
+    ViewBag.Title = "Team Scoring Comparison";
+    var results = Model.ToList();
+    var distinctEventNames = results.SelectMany(x => x.EventScores).Select(x => x.EventName).Distinct();
+    var winningAssessmentId = results.OrderByDescending(x => x.SummaryScore.Percentage).FirstOrDefault()?.AssessmentId;
+}
+
+<style>
+    .section-title {
+        font-weight: bold;
+        padding-top: 40px !important;
+    }
+
+    .section-space * {
+        padding-top: 40px !important;
+    }
+
+    .c-0 {
+        background-color: white;
+    }
+
+    .c-1 {
+        background-color: #EEEFF8;
+    }
+
+    .winner {
+        background-color: #E1F7EF;
+    }
+</style>
+
+<h2>@ViewBag.Title</h2>
+
+<table class="table table-condensed table-striped table-sm">
+    <colgroup>
+        <col />
+        @{
+            var teamCounter = 0;
+            foreach (var team in results)
+            {
+                var c = "c-1";
+                if (teamCounter % 2 == 0)
+                {
+                    c = "c-0";
+                }
+                if (team.AssessmentId == winningAssessmentId)
+                {
+                    c = "winner";
+                }
+                <col class="@c" />
+                <col class="@c" />
+                teamCounter++;
+            }
+        }
+    </colgroup>
+    <thead>
+        <tr>
+            <th>&nbsp;</th>
+            @for (var i = 0; i < results.Count; i++)
+            {
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="section-title">
+            <td>Name</td>
+            @foreach (var team in results)
+            {
+                <td width="10%" nowrap="nowrap">&nbsp;</td>
+                <td width="10%" nowrap="nowrap" class="text-right">@team.AssessmentName - @team.GroupName</td>
+            }
+        </tr>
+        <tr>
+            <td>Participants</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">&nbsp;</td>
+                <td class="text-right">@team.Participants.Value</td>
+            }
+        </tr>
+        <tr>
+            <td>Time Elapsed (Minutes)</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">&nbsp; @*@team.MinutesElapsed.Percentage.ToString("P")*@</td>
+                <td class="text-right">@team.MinutesElapsed.Value.ToString("N0")</td>
+            }
+        </tr>
+        <tr class="section-space">
+            <td>&nbsp;</td>
+            @foreach (var _ in results)
+            {
+                <td class="text-right">Count</td>
+                <td class="text-right">%</td>
+            }
+        </tr>
+        <tr class="section-title">
+            <td>Overall</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.SummaryScore.Value</td>
+                <td class="text-right">@team.SummaryScore.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td>Cases Closed</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.CasesClosed.Value</td>
+                <td class="text-right">@team.CasesClosed.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td>Tasks Closed</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.TasksClosed.Value</td>
+                <td class="text-right">@team.TasksClosed.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td>Custom Fields Answered</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.CustomFieldsAnswered.Value</td>
+                <td class="text-right">@team.CustomFieldsAnswered.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td>Observables</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.Observables.Value</td>
+                <td class="text-right">@team.Observables.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td>Observables</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.Observables.Value</td>
+                <td class="text-right">@team.Observables.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td>Attachments</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.Attachments.Value</td>
+                <td class="text-right">@team.Attachments.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td>Case Logs</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.CaseLogs.Value</td>
+                <td class="text-right">@team.CaseLogs.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td>Entries</td>
+            @foreach (var team in results)
+            {
+                <td class="text-right">@team.Entries.Value</td>
+                <td class="text-right">@team.Entries.Percentage.ToString("P")</td>
+            }
+        </tr>
+        <tr>
+            <td colspan="5" class="section-title">Per Case</td>
+        </tr>
+        @foreach (var distinctEventName in distinctEventNames)
+        {
+            <tr class="section-title section-space">
+                <td>Time Elapsed (Minutes)</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">&nbsp; @*@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.MinutesElapsed.Percentage.ToString("P")*@</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.MinutesElapsed.Value.ToString("N0")</td>
+                }
+            </tr>
+            <tr>
+                <td>@distinctEventName</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.SummaryScore.Value</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.SummaryScore.Percentage.ToString("P")</td>
+                }
+            </tr>
+            <tr>
+                <td>Participants</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.Participants.Value</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.Participants.Percentage.ToString("P")</td>
+                }
+            </tr>
+            <tr>
+                <td>Tasks Closed</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.TasksClosed.Value</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.TasksClosed.Percentage.ToString("P")</td>
+                }
+            </tr>
+            <tr>
+                <td>Custom Fields Answered</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.CustomFieldsAnswered.Value</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.CustomFieldsAnswered.Percentage.ToString("P")</td>
+                }
+            </tr>
+            <tr>
+                <td>Observables</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.Observables.Value</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.Observables.Percentage.ToString("P")</td>
+                }
+            </tr>
+            <tr>
+                <td>Attachments</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.Attachments.Value</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.Attachments.Percentage.ToString("P")</td>
+                }
+            </tr>
+            <tr>
+                <td>Case Logs</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.CaseLogs.Value</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.CaseLogs.Percentage.ToString("P")</td>
+                }
+            </tr>
+            <tr>
+                <td>Entries</td>
+                @foreach (var team in results)
+                {
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.Entries.Value</td>
+                    <td class="text-right">@team.EventScores.FirstOrDefault(x => x.EventName == distinctEventName)?.Entries.Percentage.ToString("P")</td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

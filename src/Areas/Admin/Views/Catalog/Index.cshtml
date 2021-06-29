@@ -1,0 +1,122 @@
+@*
+    SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+    Copyright 2021 Carnegie Mellon University.
+    NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+    BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+    TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+    Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+    [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+    Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+    DM21-0384
+*@
+
+@model Seer.Areas.Admin.ViewModels.CatalogViewModel
+@{
+    ViewBag.Title = "Inject Catalog";
+}
+<style>
+    table * {
+        font-size: 95%
+    }
+
+    .nw {
+        white-space: nowrap;
+    }
+
+    table * p {
+        margin-bottom: 0
+    }
+</style>
+
+<div class="pull-right">
+    <a class="btn btn-secondary" href="/admin/catalog/import">Bulk Import</a>
+    <a class="btn btn-primary" href="/admin/catalog/create">Create New</a>
+</div>
+
+<h2>@ViewBag.Title</h2>
+
+<div class="row" style="margin-top: 30px">
+    <div class="col-sm-12">
+        <table class="table table-sm table-striped">
+            <thead>
+                <th width="5%">Name</th>
+                <th>Executive Summary</th>
+                <th>Targeted Systems</th>
+                <th>Owner</th>
+                <th>Created</th>
+                <th>&nbsp;</th>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.CatalogItems.OrderBy(x => x.Name))
+                {
+                    <tr>
+                        <td class="text-nowrap">
+                            <a href="@Url.Action("Edit", "Catalog", new {id = item.Id})">
+                                @item.Name
+                            </a>
+                        </td>
+                        <td>
+                            <p>
+                                <strong>
+                                    @item.ExtendedName
+                                </strong>
+                            </p>
+                            @item.ExecutiveSummary
+                        </td>
+                        <td>
+                            @Html.Raw(item.TargetedSystems?
+                        .Replace("http", " http")
+                        .Replace(".com", ".com ")
+                        .Replace(".mil", ".mil ")
+                        .Replace(".aspx", ".aspx ")
+                        )
+                        </td>
+                        <td>
+                            <span class="nw">
+                                @if (!string.IsNullOrEmpty(item.Owner))
+                                {
+                                    @Html.Raw(item.Owner.Replace("<p>", "<i class='fa fa-user' aria-hidden='true'></i> ").Replace("</p>", "<br/>"))
+                                }
+                            </span>
+                        </td>
+                        <td>@item.Created.ToString("d")</td>
+                        <td>
+                            <a href="#" title="Delete Inject" data-href="/admin/catalog/@item.Id/delete" data-toggle="modal" data-target="#confirm-delete">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Delete
+            </div>
+            <div class="modal-body">
+                Are you sure you want to permanently delete this inject from the catalog?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <form action="#" method="POST" id="delete_form">
+                    <button class="btn btn-danger btn-ok" type="submit">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+    $(function () {
+        $('#confirm-delete').on('show.bs.modal', function (e) {
+            $(this).find('#delete_form').attr('action', $(e.relatedTarget).data('href'));
+        });
+    });
+</script>
+}
