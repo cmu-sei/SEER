@@ -18,14 +18,15 @@ SEER, in combination with an IR platform (TheHive) and Communications App (Matte
 
 ## Team Assessment Challenges
 
-The ideal assessment would involve analyzing every step of a unit’s process for incident management (for DCO, this is identification, mitigation, quarantine, etc.), the timing related to their action, and their lines of communication as they operate. These requirements have been hard to capture with traditional assessment systems.
+The ideal assessment would involve analyzing every step of a unit’s process for incident management — for Defensive Cyber Operations (DCO), this is traditionally identification, mitigation, quarantine, etc. — the timing related to their action, and their lines of communication as they operate. These requirements have been hard to capture with traditional assessment systems.
 
 There are many stakeholders with distinct needs within exercise and training, including:
 
 - Exercise Administrators
 - White Cell or Embedded Observers
-- Red Team or OPFOR
-- Blue Team or DCO
+- Red Team or Opposing Force (OPFOR)
+- Blue Team — DCO / Offensive Cyber Operations (OCO)
+- Purple Teams — A security methodology whereby red and blue teams work together to maximize continuous feedback and knowledge transfer
 
 ## Problem Statement
 
@@ -51,11 +52,13 @@ As part of ongoing evaluation, SEER seeks to answer assessment-related questions
 
 ## Typical Workflow
 
-1. Admins/OPFOR design exercise scenario along a timeline, including individual injects with each step mapped to MITRE ATT&CK
+1. Definition of training objectives — an important step in establishing what is to be assessed — these objectives drive the design of the exercise scenario
+2. Training objectives are mapped to scenario events (aka "injects")
+3. Admins/OPFOR design exercise scenario along a timeline, including individual injects with each step mapped to MITRE ATT&CK
    - Injects are evolved from our internal inject catalog of hundreds of exploits
-2. Admin/OPFOR clicks button in SEER to add event to MISP with default mapped info, which includes necessary tags for when it comes back to SEER. (MISP also provides HHQ intel on potential threats)
-3. MISP automatically updates HIVE. 
-4. As the assessed team provides updates from within The Hive on activity they are seeing, SEER consumes this data and processes it to make an effective assessment
+4. Admin/OPFOR clicks button in SEER to add event to MISP with default mapped info, which includes necessary tags for when it comes back to SEER. (MISP also provides HHQ intel on potential threats)
+5. MISP automatically updates HIVE.
+6. As the assessed team records operational notes from within The Hive on activity they are seeing, SEER consumes this data and processes it to make an effective assessment
 
 ## Next Steps
 
