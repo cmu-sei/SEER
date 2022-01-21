@@ -61,7 +61,7 @@ namespace Seer.Areas.EO.Controllers
 
                         if (line.StartsWith("\t") || line.StartsWith(" "))
                         {
-                            metItem.METSCTs.Add(new METItemSCT { Index = sctIndex, Name = processedLine, Status = ActiveStatus.Active });
+                            metItem.METSCTs.Add(new METItemSCT { Index = sctIndex, Name = processedLine, Status = ActiveStatus.Active, Title = "Step"});
                             sctIndex++;
                         }
                         else

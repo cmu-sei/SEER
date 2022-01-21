@@ -59,6 +59,12 @@ namespace Seer.Infrastructure.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int Index { get; set; }
+        
+        /// <summary>
+        /// This gets displayed, could also be referred to as "type" - most commonly "SCT" or "Step"
+        /// </summary>
+        public string Title { get; set; }
+        
         public string Name { get; set; }
         public DateTime Created { get; set; } = DateTime.UtcNow;
         public int SectionId { get; set; }

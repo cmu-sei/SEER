@@ -22,7 +22,7 @@
 
 @if (Model != null)
 {
-    <h3 class="pull-right"><span id="complete">0</span>% SCTs Completed Successfully
+    <h3 class="pull-right"><span id="complete">0</span>% Completed Successfully
 </h3>
     <div class="pull-right" style="margin: -5px 20px 0 0;">
     <canvas id="myChart"></canvas>
@@ -50,7 +50,7 @@ else
                         <div class="col col-md-1">
                             <p class="card-text @if(s.Status == ActiveStatus.Inactive){<text> disabled</text>}">
                                 <i class="fa fa-circle-thin sct @("met-" + item.Id)" aria-hidden="true" data-id="@s.Id"></i>
-                                <strong>SCT @s.Index</strong>
+                                <strong>@s.Title @s.Index</strong>
                             </p>
                         </div>
                         <div class="col col-md-9">

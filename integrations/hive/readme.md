@@ -1,5 +1,7 @@
 # TheHive (RE: its use in parallel with SEER)
 
+1. Default password to theHive is admin@thehive.local/secret
+
 Webhooks are configured using the webhook key in the configuration file (/etc/thehive/application.conf by default). A minimal configuration contains an arbitrary name and an URL. The URL corresponds to the HTTP endpoint:
 
 Hive v3:
@@ -21,28 +23,29 @@ notification.webhook.endpoints = [
     url: "http://host.docker.internal:38080/api/hive/webhook"
     version: 0
     wsConfig: {}
-    includedTheHiveOrganisations: []
+    auth: {type: "none"}
+    includedTheHiveOrganisations: ["*"]
     excludedTheHiveOrganisations: []
   }
 ]
 ```
 
-Start Hive:
+1. Start Hive:
 
 ```shell
 docker-compose up -d
 ```
 
-Now copy in configuration:
+2. Now copy in configuration:
 
 ```shell
 docker cp application.conf thehive_thehive_1:/etc/thehive/application.conf
 ```
 
-Might need this to trigger hook as well:
+3. Activate the hook WITH AN ORG ACCOUNT, NOT THE ADMIN ACCOUNT:
 
 ```shell
-curl -XPUT -u admin@thehive.local:secret -H 'Content-type: application/json' http://host.docker.internal:9000/api/config/organisation/notification -d '
+curl -XPUT -u gold@cert.org:secret -H 'Content-type: application/json' http://host.docker.internal:9000/api/config/organisation/notification -d '
 {
   "value": [
     {
@@ -54,6 +57,8 @@ curl -XPUT -u admin@thehive.local:secret -H 'Content-type: application/json' htt
 }'
 
 ```
+
+4. Restart hive container
 
 More information:
 https://github.com/TheHive-Project/TheHiveDocs/blob/master/admin/webhooks.md

@@ -1,43 +1,109 @@
 [
   {
-    "Campaign": "Training 2021",
-    "Operations": ["Evolution 1", "Evolution 2"],
+    "Campaign": "GCD 2022",
+    "Operations": ["MC1", "MC2", "MC3", "EM"],
     "Groups": [
       {
-        "Group": "Alpha Team",
+        "Group": "RCC-C",
         "Assessments": [
           {
-            "Name": "Evolution 1",
+            "Name": "MC1",
             "Status": 1
           },
           {
-            "Name": "Evolution 2",
+            "Name": "MC2",
+            "Status": 1
+          },
+          {
+            "Name": "MC3",
+            "Status": 1
+          },
+          {
+            "Name": "EM",
             "Status": 1
           }
         ]
       },
       {
-        "Group": "Bravo Team",
+        "Group": "RCC-E",
         "Assessments": [
           {
-            "Name": "Evolution 1",
+            "Name": "MC1",
             "Status": 1
           },
           {
-            "Name": "Evolution 2",
+            "Name": "MC2",
+            "Status": 1
+          },
+          {
+            "Name": "MC3",
+            "Status": 1
+          },
+          {
+            "Name": "EM",
             "Status": 1
           }
         ]
       },
       {
-        "Group": "Charlie Team",
+        "Group": "RCC-K",
         "Assessments": [
           {
-            "Name": "Evolution 1",
+            "Name": "MC1",
             "Status": 1
           },
           {
-            "Name": "Evolution 2",
+            "Name": "MC2",
+            "Status": 1
+          },
+          {
+            "Name": "MC3",
+            "Status": 1
+          },
+          {
+            "Name": "EM",
+            "Status": 1
+          }
+        ]
+      },
+      {
+        "Group": "RCC-P",
+        "Assessments": [
+          {
+            "Name": "MC1",
+            "Status": 1
+          },
+          {
+            "Name": "MC2",
+            "Status": 1
+          },
+          {
+            "Name": "MC3",
+            "Status": 1
+          },
+          {
+            "Name": "EM",
+            "Status": 1
+          }
+        ]
+      },
+      {
+        "Group": "RCC-S",
+        "Assessments": [
+          {
+            "Name": "MC1",
+            "Status": 1
+          },
+          {
+            "Name": "MC2",
+            "Status": 1
+          },
+          {
+            "Name": "MC3",
+            "Status": 1
+          },
+          {
+            "Name": "EM",
             "Status": 1
           }
         ]

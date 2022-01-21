@@ -1,5 +1,5 @@
 ﻿body {
-	font-family: "Segoe UI", Verdana, Helvetica, Sans-Serif;
+	font-family: "Segoe UI", Verdana, Helvetica, sans-serif;
 	padding-bottom: 20px;
 }
 .container {
@@ -264,6 +264,7 @@ for details on configuring this project to bundle and minify static web assets. 
 .navbar {min-height: 62px;}
 .navbar, .navbar * {
 	background-color: #3d6283 !important;
+	font-size: 14px;
 }
 .dropdown-item, .nav-link, .nav-link * {
 	color: white !important;
