@@ -1,5 +1,5 @@
 # multi-stage target: dev
-FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine AS dev
+FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS dev
 
 ENV ASPNETCORE_URLS=http://*:5000 \
     ASPNETCORE_ENVIRONMENT=DEVELOPMENT
@@ -12,7 +12,7 @@ RUN dotnet publish -c Release -o /app/dist
 CMD ["dotnet", "run"]
 
 # multi-stage target: prod
-FROM mcr.microsoft.com/dotnet/aspnet:5.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine AS prod
 
 ARG commit
 ENV COMMIT=$commit
@@ -22,8 +22,10 @@ COPY App_Data /app/App_Data
 COPY ./license.txt /app/license.txt
 
 WORKDIR /app
-EXPOSE 5000
+
+ENV SEER_VERSION=3.1.0.0
 ENV ASPNETCORE_URLS=http://*:5000
+
 EXPOSE 5000
 
 CMD ["dotnet", "Seer.dll"]

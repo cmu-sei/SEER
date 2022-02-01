@@ -14,19 +14,25 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Seer.Infrastructure.Data;
 using Seer.Infrastructure.Extensions;
 using Seer.Infrastructure.Models;
 namespace Seer.Infrastructure.Services
 {
     public class IntegrationMessageConverterService
     {
+        private readonly ApplicationDbContext _dbContext;
+        
         public readonly HiveObject HiveObject;
         public IEnumerable<KeyValuePair<string, string>> Updates { get; private set; }
         public EventDetailHistory Detail { get; set; } = new();
 
-        public IntegrationMessageConverterService(string payload)
+        public IntegrationMessageConverterService(string payload, ApplicationDbContext dbContext)
         {
+            this._dbContext = dbContext;
+            
             try
             {
                 this.HiveObject = JsonConvert.DeserializeObject<HiveObject>(payload);
@@ -173,9 +179,28 @@ namespace Seer.Infrastructure.Services
 
                     var tagArray = tagString.Split(Convert.ToChar(splitChar));
                     if (tagArray[0].ToUpper().StartsWith("ASSESSMENT"))
+                    {
                         this.Detail.AssessmentId = Convert.ToInt32(tagArray[1].Replace("\"", ""));
+                    }
+
                     if (tagArray[0].ToUpper().StartsWith("EVENT"))
-                        this.Detail.EventId = Convert.ToInt32(tagArray[1].Replace("\"", ""));
+                    {
+                        var t = tagArray[1].Replace("\"", "");
+
+                        // is it an id or is it the name?
+                        if (int.TryParse(t, out var i))
+                        {
+                            this.Detail.EventId = Convert.ToInt32(i);
+                        }
+                        else
+                        {
+                            var ev = this._dbContext.Events.FirstOrDefault(x => string.Equals(x.Name, t, StringComparison.InvariantCultureIgnoreCase));
+                            if (ev != null)
+                            {
+                                this.Detail.EventId = ev.Id;
+                            }
+                        }
+                    }
                 }
             }
         }

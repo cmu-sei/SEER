@@ -28,7 +28,7 @@ namespace Seer
         public static Configuration Configuration { get; private set; }
         public static void Main(string[] args)
         {
-            _log.Warn("SEER coming online...");
+            _log.Warn("System coming online...");
             Configuration = ConfigurationService.Load();
 
             var host = CreateHostBuilder(args).Build();

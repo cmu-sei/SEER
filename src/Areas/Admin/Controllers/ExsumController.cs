@@ -287,7 +287,7 @@ namespace Seer.Areas.Admin.Controllers
                 {
                     try
                     {
-                        var resource = new IntegrationMessageConverterService(history.IntegrationObject);
+                        var resource = new IntegrationMessageConverterService(history.IntegrationObject, _db);
 
                         var created = Convert.ToDouble(resource.HiveObject.StartDate).FromJavaTimeStampToDateTime();
                         var duration = created.ToLocalTime() - executionTime.Value.ToLocalTime();

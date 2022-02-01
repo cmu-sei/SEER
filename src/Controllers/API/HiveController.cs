@@ -35,7 +35,8 @@ namespace Seer.Controllers.API
         [ProducesResponseType(typeof(IActionResult), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Webhook(object payload)
         {
-            // var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress; 3await IntegrationMessageService.Process(this._db, this._hubContext, payload);
+            //var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
+            await IntegrationMessageService.Process(this._db, this._hubContext, payload);
             return Ok("OK");
         }
     }

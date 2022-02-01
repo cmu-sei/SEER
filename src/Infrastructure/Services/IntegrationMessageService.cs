@@ -89,7 +89,7 @@ namespace Seer.Infrastructure.Services
             object payload)
         {
             log.Debug(payload);
-            var o = new IntegrationMessageConverterService(payload.ToString());
+            var o = new IntegrationMessageConverterService(payload.ToString(), dbContext);
 
             if (o.Detail.AssessmentId < 0 || o.Detail.EventId < 0)
             {
@@ -128,7 +128,7 @@ namespace Seer.Infrastructure.Services
             {
                 try
                 {
-                    var x = new IntegrationMessageConverterService(history.IntegrationObject);
+                    var x = new IntegrationMessageConverterService(history.IntegrationObject, dbContext);
                     history.Message = x.Detail.Message;
 
                     var o = JsonConvert.DeserializeObject<HiveObject>(history.IntegrationObject);

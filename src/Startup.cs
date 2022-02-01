@@ -189,8 +189,7 @@ namespace Seer
             services.AddRouting(options => options.LowercaseUrls = true);
 
             services.AddMvc()
-                .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); })
-                .SetCompatibilityVersion(CompatibilityVersion.Latest);
+                .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
             services.AddSignalR()
                 .AddJsonProtocol(options => { options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
