@@ -1,0 +1,280 @@
+@*
+SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
+Copyright 2021 Carnegie Mellon University.
+NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
+BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
+TRADEMARK, OR COPYRIGHT INFRINGEMENT.
+Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
+[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
+Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
+DM21-0384
+*@
+
+@using Seer.Infrastructure.Enums
+@using Seer.Infrastructure.Models
+@model IEnumerable<Seer.Infrastructure.Models.Event>
+
+@{
+    ViewBag.Title = "Assessment Events";
+}
+
+<style>
+    .table-sm * {font-size: small;}
+    .history_table {margin-left:25px;}
+    .history_table * { border: 0 !important; font-size: 11px; word-wrap: anywhere; }
+    .history_icon img {width: 24px; margin: 0; padding: 0;}
+</style>
+
+<h2>
+    @ViewBag.GroupName @ViewBag.AssessmentName - @ViewBag.Title
+</h2>
+
+<div class="row" style="margin-top: 30px">
+    <div class="col-sm-12">
+        <table class="table table-sm table-striped" id="main">
+            <thead>
+            <tr>
+                <td class="col-1">Event</td>
+                <td class="col-5">Description</td>
+                <td class="col-2">MET</td>
+                <td class="col-1">Step</td>
+                <td class="col-1">Measure</td>
+                <td class="col-2">Notes</td>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                var metId = -1;
+                var sctId = -1;
+                var measure = METItemSCTScore.Score.NA;
+                var comments = "";
+                foreach (var (_, value) in ((Dictionary<int, METItemSCTScore>)ViewBag.Scores).Where(score => score.Key == item.Id))
+                {
+                    metId = value.METId;
+                    sctId = value.SCTId;
+                    measure = value.SCTScore;
+                    comments = value.Comments;
+                    //<text>@item.Id / @value.Id</text>
+                    break;
+                }
+
+                <tr>
+                    <td title="@item.Id">
+                        @item.Name
+                    </td>
+                    <td>
+                        @item.ExtendedName
+                        <table id="history-@item.Id" data-id="@item.Id" class="history history_table"></table>
+                    </td>
+                    <td>
+                        <select class="met form-control form-control-sm option" id="met-@item.Id" data-id="@item.Id" data-selected="@metId">
+                            @foreach (var met in ViewBag.METs)
+                            {
+                                <option value="0">Select a MET</option>
+                                foreach (var metItem in met.METItems)
+                                {
+                                    <option value="@metItem.Id" @if(metId == metItem.Id){<text>selected="selected"</text>}>@metItem.Name</option>
+                                }
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <select class="step form-control form-control-sm option" id="step-@item.Id" data-id="@item.Id" disabled="disabled" data-selected="@sctId"></select>
+                    </td>
+                    <td>
+                        <select class="status form-control form-control-sm option" id="status-@item.Id" data-id="@item.Id" disabled="disabled">
+                            <option value="0" @if(measure==METItemSCTScore.Score.NA){<text>selected="selected"</text>}>Select</option>
+                            <option value="1" @if(measure==METItemSCTScore.Score.Go){<text>selected="selected"</text>}>GO</option>
+                            <option value="2" @if(measure==METItemSCTScore.Score.NoGo){<text>selected="selected"</text>}>NO GO</option>
+                            <option value="3" @if(measure==METItemSCTScore.Score.Partial){<text>selected="selected"</text>}>PARTIAL</option>
+                            <option value="9" @if(measure==METItemSCTScore.Score.NA){<text>selected="selected"</text>}>N/A</option>
+                        </select>
+                    </td>
+                    <td>
+                        <textarea class="comments form-control form-control-sm option" style="height:1em" id="comments-@item.Id" data-id="@item.Id" disabled="disabled">@comments</textarea>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<input type="hidden" name="assessmentid" id="assessmentid" value="@ViewBag.AssessmentId"/>
+<input type="hidden" name="groupid" id="groupid" value="@ViewBag.GroupId"/>
+
+@section scripts {
+    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+    <script>
+    $(function () {
+        function Split(o) {
+            return o.toString().split("-");
+        }
+        
+        function getQueryStrings() { 
+          var assoc  = {};
+          var decode = function (s) { return decodeURIComponent(s.replace(/\+/g, " ")); };
+          var queryString = location.search.substring(1); 
+          var keyValues = queryString.split('&'); 
+        
+          for(var i in keyValues) { 
+            var key = keyValues[i].split('=');
+            if (key.length > 1) {
+              assoc[decode(key[0])] = decode(key[1]);
+            }
+          } 
+        
+          return assoc; 
+        } 
+        
+        function formatMessage(o) {
+            o = o.replace(/[\n\r]/g, '<br/>');
+            let a = o.split(" ")
+            o = "";
+            for (let i = 0; i < a.length; i++) {
+                if (a[i]) {
+                o += a[i].match(/.{1,30}/g).join(" ") + " "; }
+            }
+            return o;
+        }
+        
+        function formatHistoryItem(eventId, historyType, created, fName, msg) {
+            let t = moment.utc(created); 
+            if (fName === "" || fName === null) fName = "System";
+            let icon = '<img src="/content/images/'+ historyType.toLowerCase() +'.png" title="'+ historyType +'" class="fa fa-fixed" />';
+            return '<tr id="note-'+ eventId +'"><td class="history_icon">'+ icon + '</td><td nowrap="nowrap">' + 
+                t.fromNow()+'</td><td nowrap="nowrap">'+ fName +
+                '</td><td>'+ formatMessage(msg) +'</td></tr>';
+        }
+        
+        let groupId = $("#groupid").val();
+        let assessmentId = $("#assessmentid").val();
+        let steps = [];
+        
+        @foreach (var met in ViewBag.METs)
+        {
+            foreach (var mItems in met.METItems)
+            {
+                foreach (var sct in mItems.METSCTs)
+                {
+                    <text>steps.push([@mItems.Id, @sct.Id, '@sct.Name']);</text>
+                }
+            }
+        }
+        
+        /// load
+        $(".met").each(function () {
+            let control = $(this);
+            let itemId = control.data("id");
+            let metId = Number(control.data("selected"));
+            if (metId>0){
+                o = "#step-" + itemId;
+                let selectedSct = $(o).data("selected");
+                $(o).find('option').remove();
+                $(o).append($('<option>', {value:0}).text("Choose a Step"));
+                for (const item of steps) {
+                    if (item[0] == control.val()) {
+                        opt = document.createElement('option');
+                        opt.value = item[1];
+                        opt.innerHTML = item[2];
+                        if (item[1] == selectedSct)
+                            opt.selected = true;
+                        $(o).append(opt);
+                    }
+                }
+                $(o).prop('disabled', false);
+                $("#status-" + itemId).prop('disabled', false);
+                $("#comments-" + itemId).prop('disabled', false);
+            }
+        });
+        
+        //history
+        var qs = getQueryStrings();
+        if (qs["view"] !== "condensed"){ 
+            $.getJSON('/api/seer/assessments/@ViewBag.AssessmentId/history', function(data) {
+                $('.history').each(function(i, obj) {
+                    let x = $(this);
+                    let eventId = x.data("id");
+                    $.each(data, function(key, val){
+                        if (val.eventId === eventId){
+                            let u = val.user;
+                            let fName = "";
+                            if (u !== null) {
+                                fName = u.firstName;
+                            }
+                            x.prepend(formatHistoryItem(eventId, val.historyType, val.created, fName, val.message.replace("<", "")));
+                        }
+                    })
+                })
+            });
+        }
+        
+        $(".met").change(function () {
+            let control = $(this);
+            let itemId = control.data("id");
+            
+            o = "#step-" + itemId;
+            $(o).prop('disabled', false);
+            let selectedSct = $(o).data("selected");
+            
+            $(o).find('option').remove();
+            $(o).append($('<option>', {value:0}).text("Choose a Step"));
+            for (const item of steps) {
+                if (item[0] == control.val()) {
+                    opt = document.createElement('option');
+                    opt.value = item[1];
+                    opt.innerHTML = item[2];
+                    if (item[1] == selectedSct)
+                        opt.selected = true;
+                    $(o).append(opt);
+                }
+            }
+        });
+        
+        $(".step").change(function () {
+            let control = $(this);
+            let itemId = control.data("id");
+            let val = parseInt(control.val());
+            if(val > 0) {
+                $("#status-" + itemId).prop('disabled', false);
+                $("#comments-" + itemId).prop('disabled', false);
+            } else {
+                $("#status-" + itemId).prop('disabled', true);
+                $("#comments-" + itemId).prop('disabled', true);
+            }
+        });
+        
+        const hub = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/measure?groupid=" + groupId + "&assessmentid=" + assessmentId)
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+        $(".status").on("change", null, function () {
+            let o = Split(this.id);
+            o = o[1];
+            score(o);
+        });
+        
+        $(".comments").on("change", null, function () {
+            let o = Split(this.id);
+            o = o[1];
+            score(o);
+        });
+        
+        function score(o) {
+            console.log(o)
+            console.log($("#step-" + o).val())
+            console.log($("#comments-" + o).val())
+            console.log($("#status-" + o).val())
+            hub.invoke("Measure", Number(o), Number($("#step-" + o).val()), $("#comments-" + o).val(), Number($("#status-" + o).val()));
+        }
+        
+        hub.on("Measure", function (x, id, comment, status) {
+            console.log("hub returned: " + x,  id, comment + " " + status);
+        });
+    
+        hub.start().catch(err => console.error(err.toString()));
+    })
+    </script>
+}

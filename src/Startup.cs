@@ -56,6 +56,8 @@ namespace Seer
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            
             services
                 .AddApplicationData(_conf.Database.Provider, _conf.Database.ConnectionString)
                 .AddApplicationServices();
@@ -201,8 +203,7 @@ namespace Seer
 
             services.AddCors(options => options.UseConfiguredCors(Configuration.GetSection("CorsPolicy")));
 
-            services.AddControllersWithViews()
-                .AddRazorRuntimeCompilation();
+            services.AddControllersWithViews().AddRazorRuntimeCompilation();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -262,6 +263,7 @@ namespace Seer
                 endpoints.MapHub<AssessmentTimeHub>("/hubs/time");
                 endpoints.MapHub<ExecutionHub>("/hubs/execution");
                 endpoints.MapHub<METHub>("/hubs/mets");
+                endpoints.MapHub<MeasureHub>("/hubs/measure");
                 endpoints.MapHub<MouseTrackingHub>("/hubs/mouse");
                 endpoints.MapHub<QuizHub>("/hubs/quizzes");
                 endpoints.MapHub<TasksHub>("/hubs/tasks");

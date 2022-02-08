@@ -50,7 +50,6 @@ namespace Seer.Areas.EO.Controllers
                 formattedEvent.Histories = await _db.EventDetailHistory
                 .Where(x => x.EventId == eventId
                             && x.HistoryAction != "CREATE"
-                            && !x.Message.ToLower().Contains("status to completed")
                             && !x.Message.ToLower().Contains("owner to")
                             && !x.Message.ToLower().Contains("update user")
                             && !x.Message.ToLower().Contains("update alert")

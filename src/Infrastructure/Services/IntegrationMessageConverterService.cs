@@ -31,16 +31,18 @@ namespace Seer.Infrastructure.Services
 
         public IntegrationMessageConverterService(string payload, ApplicationDbContext dbContext)
         {
-            this._dbContext = dbContext;
-            
             try
             {
                 this.HiveObject = JsonConvert.DeserializeObject<HiveObject>(payload);
             }
-            catch
+            catch(Exception e)
             {
-                throw new Exceptions.HiveFormattingException($"Cannot Deserialize HiveObject. Payload is not formatted as expected: [{payload}]");
+                // TODO: need to put failed requests somewhere
+                
+                throw new Exceptions.HiveFormattingException($"Cannot Deserialize HiveObject. Payload is not formatted as expected: [{payload}] {e}");
             }
+            
+            this._dbContext = dbContext;
 
             this.Detail.User = new User();
             this.Detail.AssessmentId = -1;

@@ -46,10 +46,18 @@ namespace Seer.Infrastructure.Services
 
             model.AssessmentId = association.AssessmentId;
             model.EventId = association.EventId;
-            model.EventDetailId = association.EventDetailId;
+            if(association.EventDetailId > 0)
+                model.EventDetailId = association.EventDetailId;
 
-            dbContext.Update(model);
-            await dbContext.SaveChangesAsync(ct);
+            try
+            {
+                dbContext.Update(model);
+                await dbContext.SaveChangesAsync(ct);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
 
             return await TryMatchUnmatched(dbContext);
         }

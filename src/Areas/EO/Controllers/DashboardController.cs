@@ -92,7 +92,7 @@ namespace Seer.Areas.EO.Controllers
             this.AssessmentName = a.Name;
             this.GroupId = a.GroupId;
 
-            return RedirectToAction("Index", "Events");
+            return RedirectToAction("Index", "Measure");
         }
     }
 }

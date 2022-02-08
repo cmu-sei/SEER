@@ -35,6 +35,12 @@ namespace Seer.Areas.Admin.Controllers
             this._db = dbContext;
         }
 
+        [HttpGet("coverpage")]
+        public async Task<ActionResult> CoverPage()
+        {
+            return View();
+        }
+        
         [HttpGet]
         public async Task<ActionResult> Index()
         {

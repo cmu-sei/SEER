@@ -38,18 +38,23 @@ DM21-0384
         {
             var o = JsonConvert.DeserializeObject<HiveObject>(history.IntegrationObject);
 
-            if (o.Operation == "Creation")
-            {
-                return string.Empty;
-            }
+            // if (o.Operation == "Creation")
+            // {
+            //     return string.Empty;
+            // }
 
             created = Convert.ToDouble(o.StartDate).FromJavaTimeStampToDateTime();
-
+            
             if (string.IsNullOrEmpty(o.BaseObject.UpdatedBy) || o.BaseObject.UpdatedBy.StartsWith("step-admin") || o.BaseObject.UpdatedBy.StartsWith("hive_admin"))
             {
                 return string.Empty;
             }
             updatedBy = o.BaseObject.UpdatedBy;
+            if (string.IsNullOrEmpty(updatedBy))
+            {
+                updatedBy = history.User.Email;
+            }
+            
             if (o.BaseObject.Title != null)
             {
                 title = o.BaseObject.Title.ToString();
@@ -65,25 +70,33 @@ DM21-0384
             //     }
             // }
         }
+        created = history.Created;
         
-        var duration = (executionTime.ToLocalTime() - created.ToLocalTime()).ToString(@"hh\:mm");
+        var duration = (created.ToLocalTime() - executionTime.ToLocalTime()).ToString(@"hh\:mm");
 
-        var sb = new StringBuilder($"<div class='container {score} small' title='history_id: {history.Id}'><div class='row'>"); // + created + created.MillisecondsTimestamp());
-        sb.Append("<div class='.col-sm--1 history_time'>(+").Append(duration).Append(")&nbsp;</div><div class='col history_title'>");
-        sb.Append("<img src='/content/images/").Append(history.HistoryType.ToLower()).Append(".png' class='fa fa-fixed' /> ");
-        sb.Append("<span class='user'>").Append("<a href='exsum/user/").Append(history.User.Id).Append("'>").Append(history.User.Email).Append("</a> </span>");
-
-        var message = history.Message.ToLower().Replace("<", "");
-
-        message = message.Replace("[[", "<a class='group1 cboxElement' href='").Replace("]]", "'><img src='/content/images/resize.png' class='fa fa-fixed' /></a>");
-
-        sb.Append(message);
-        if (!string.IsNullOrEmpty(title))
-        {
-            sb.Append(" - ").Append(title);
-        }
-        sb.Append("</div>");
-        sb.Append("</div></div>");
+        var sb = new StringBuilder($"<tr>");
+        sb.Append($"<td class='col-1 history_time {score}' title='history_id: {history.Id} execution_time: {created}' nowrap='nowrap'>");
+            sb.Append("<img src='/content/images/").Append(history.HistoryType.ToLower()).Append(".png' class='fa fa-fixed' />&nbsp;");
+            sb.Append("(+").Append(duration).Append(")");
+        sb.Append("</td>");
+        
+        // sb.Append("<td class='col-1' nowrap='nowrap'>");
+        // if (!updatedBy.Contains(".api") && !updatedBy.Contains("cmu-admin"))
+        // {
+        //     sb.Append("<span class='user'>").Append(updatedBy).Append(" </span>");
+        // }
+        // sb.Append("&nbsp;</td>");
+        
+        sb.Append("<td class='history_title'>");
+            var message = history.Message.ToLower().Replace("<", "");
+            message = message.Replace("[[", "<a class='group1 cboxElement' href='").Replace("]]", "'><img src='/content/images/resize.png' class='fa fa-fixed' /></a>");
+            sb.Append(message);
+            if (!string.IsNullOrEmpty(title) && !title.StartsWith("GCD-"))
+            {
+                sb.Append(" - ").Append(title);
+            }
+            sb.Append("</td>");
+            sb.Append("</tr>");
         return sb.ToString();
     }
 
@@ -147,9 +160,7 @@ DM21-0384
     h4 { font-size: 0.98em !important; font-weight:bolder; }
     .pull-right { text-align: right; }
     table, td, p, ul {margin-bottom:0 !important;}
-    .history_desc {font-size: small;}
-    .history_time {float: left; }
-    .history_title {display: block;}
+    .table-nl * {border:none !important; font-size: small}
     .user {font-style: italic; color: #2b669a}
     .fa-fixed {width: 18px; margin-top: -3px;}
 </style>
@@ -157,7 +168,7 @@ DM21-0384
 <div class="container-fluid">
 <div style="margin:5px 0 30px 0">
     <h1 class="form-inline">
-        <i class="fas fa-eye"></i> @ViewBag.GroupName @assessment.Name EXSUM - STARTEX @assessment.ExecutionTime.ToUniversalTime().ToString("F")Z
+        <i class="fas fa-eye"></i> @ViewBag.GroupName @assessment.Name EXSUM - <span title="@assessment.ExecutionTime">STARTEX @assessment.ExecutionTime.ToUniversalTime().ToString("F")Z</span> 
     </h1>
 </div>
 @{
@@ -231,8 +242,8 @@ DM21-0384
         <div class="col col-10">
         @if (assessmentReportEvent.CatalogId < 1)
         {
-            <br>
-            <br>
+            <br/>
+            <br/>
             <h4>@assessmentReportEvent.Name</h4>
         }
         else
@@ -254,36 +265,129 @@ DM21-0384
                             </p>
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            <strong>Executive Summary</strong>
-                        </td>
-                        <td>
-                            <p>
-                                @assessmentReportEvent.ExecutiveSummary
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <strong>Story Line</strong>
-                        </td>
-                        <td>
-                            @Html.Raw(assessmentReportEvent.StoryLine)
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <strong>Targeted Systems</strong>
-                        </td>
-                        <td>
-                            @Html.Raw(assessmentReportEvent.TargetedSystems)
-                        </td>
-                    </tr>
+                    @if (!string.IsNullOrEmpty(@assessmentReportEvent.ExecutiveSummary))
+                    {
+                        <tr>
+                            <td>
+                                <strong>Executive Summary</strong>
+                            </td>
+                            <td>
+                                <p>
+                                    @assessmentReportEvent.ExecutiveSummary
+                                </p>
+                            </td>
+                        </tr>
+                    }
+                    @if (!string.IsNullOrEmpty(assessmentReportEvent.StoryLine))
+                    {
+                        <tr>
+                            <td>
+                                <strong>Story Line</strong>
+                            </td>
+                            <td>
+                                @Html.Raw(assessmentReportEvent.StoryLine)
+                            </td>
+                        </tr>
+                    }
+                    @if (!string.IsNullOrEmpty(assessmentReportEvent.TargetedSystems))
+                    {
+                        <tr>
+                            <td>
+                                <strong>Targeted Systems</strong>
+                            </td>
+                            <td>
+                                @Html.Raw(assessmentReportEvent.TargetedSystems)
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
+                @if (assessmentReportEvent.AssociatedSCTs != null)
+                            {
+                                foreach (var sct in assessmentReportEvent.AssociatedSCTs)
+                                {
+                                    <br/>
+                                    <table class="table-nostyle offset-sm-2 table-nl">
+                                                                @{
+                                                                    var metStatus = METItemSCTScore.Score.Go;
+                                                                    foreach (var met in assessment.METs)
+                                                                    {
+                                                                        foreach (var metItem in met.METItems)
+                                                                        {
+                                                                            if (!string.IsNullOrEmpty(assessmentReportEvent.AssociatedSCTs))
+                                                                            {
+                                                                                var ids = assessmentReportEvent.AssociatedSCTs.Split(",").Select(int.Parse).ToList();
+                                                                                var write = false;
+                                                                                foreach (var s in metItem.METSCTs)
+                                                                                {
+                                                                                    if (ids.Contains(s.Id))
+                                                                                    {
+                                                                                        if (!write)
+                                                                                        {
+                                                                                            <tr>
+                                                                                                <td colspan="3">
+                                                                                                    <h4>MET @Html.DisplayFor(modelItem => metItem.Index) @metItem.Name</h4>
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            write = true;
+                                                                                        }
+                                                                                        @if (s.Score != null)
+                                                                                        {
+                                                                                            <tr>
+                                                                                                <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                                                                                                <td colspan="2">
+                                                                                                    <p class="card-text">
+                                                                                                        <i class="fa fa-check-circle @GetClass(s.Score.SCTScore)" aria-hidden="true"></i>
+                                                                                                        <strong>@s.Title @s.Index</strong> @s.Name
+                                                                                                    </p>
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            <tr>
+                                                                                                <td colspan="2">&nbsp;</td>
+                                                                                                <td>
+                                                                                                    <ul>
+                                                                                                        <li class="@GetClass(s.Score.SCTScore)">
+                                                                                                            @s.Score.SCTScore.ToString().ToUpper():
+                                                                                                            @if (s.Score != null)
+                                                                                                            {
+                                                                                                                if (s.Score.SCTScore != METItemSCTScore.Score.Go)
+                                                                                                                {
+                                                                                                                    if (metStatus != METItemSCTScore.Score.Go)
+                                                                                                                    {
+                                                                                                                        if (metStatus != METItemSCTScore.Score.NoGo)
+                                                                                                                        {
+                                                                                                                            metStatus = s.Score.SCTScore;
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                }
+                                                                                                                var raw = s.Score.Comments
+                                                                                                                    .Replace(Environment.NewLine, "<br />")
+                                                                                                                    .Replace("<br>", "<br />")
+                                                                                                                    .Replace("<br /><br />", "<br />")
+                                                                                                                    .Replace("<br /><br />", "<br />");
+                                                                                                                @Html.Raw(raw.Substring(0, Math.Min(raw.Length, 200)))
+                                                                                                                if (raw.Length > 200)
+                                                                                                                {
+                                                                                                                    <span>...</span>
+                                                                                                                }
+                                                                                                            }
+                                                                                                        </li>
+                                                                                                    </ul>
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            </table>              
+                                }
+                                
+                            }
             </div>
-
+            
             @if (assessmentReportEvent.Details.Any())
             {
                 <h4><i class="fas fa-book-open"></i> DETAIL</h4>
@@ -463,10 +567,18 @@ DM21-0384
                 </div>
             }
 
-            @foreach (var history in assessmentReportEvent.History)
-            {
-                <div>@Html.Raw(ParseHistory(assessment.ExecutionTime, history))</div>
-            }
+            <div>
+                <table class="table table-sm table-nl offset-sm-1">
+                    
+                    @{
+                        var sortedHistories = assessmentReportEvent.History.OrderBy(x=>x.Created);
+                        foreach (var history in sortedHistories)
+                        {
+                            @Html.Raw(ParseHistory(assessment.ExecutionTime, history))
+                        }
+                    }
+                </table>
+            </div>
             {
                 var associatedQuizQuestionIds = new List<int>();
                 foreach (var d in assessmentReportEvent.Details)

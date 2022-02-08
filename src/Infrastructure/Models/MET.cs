@@ -94,7 +94,9 @@ namespace Seer.Infrastructure.Models
             Go = 1,
             [System.ComponentModel.Description("No go")]
             NoGo = 2,
-            Partial = 3
+            Partial = 3,
+            [System.ComponentModel.Description("N/A")]
+            NA = 9
         }
     }
 }

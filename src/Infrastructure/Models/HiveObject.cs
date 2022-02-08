@@ -52,7 +52,7 @@ namespace Seer.Infrastructure.Models
             [JsonProperty("_version")] public int Version { get; set; }
             [JsonProperty("pap")] public int Paa { get; set; }
             [JsonProperty("startDate")] public long StartDate { get; set; }
-            [JsonProperty("updatedAt")] public long UpdatedAt { get; set; }
+            [JsonProperty("updatedAt")] public long? UpdatedAt { get; set; }
             [JsonProperty("status")] public string Status { get; set; }
             [JsonProperty("data")] public object Data { get; set; }
             [JsonProperty("dataType")] public object DataType { get; set; }
