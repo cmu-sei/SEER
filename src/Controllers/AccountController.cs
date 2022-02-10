@@ -33,6 +33,12 @@ namespace Seer.Controllers
             _signInManager = signInManager;
         }
 
+        [HttpGet]
+        public ActionResult Index()
+        {
+            return View();
+        }
+
         [HttpGet("login")]
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)

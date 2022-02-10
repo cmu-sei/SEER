@@ -97,36 +97,43 @@ namespace Seer.Infrastructure.Services
             object payload)
         {
             log.Debug(payload);
-            var o = new IntegrationMessageConverterService(payload.ToString(), dbContext);
-
-            if (o.Detail.AssessmentId < 0 || o.Detail.EventId < 0)
+            try
             {
-                var associatedRecords = dbContext.EventDetailHistory
-                    .Where(x => x.IntegrationId == o.Detail.IntegrationId && (x.AssessmentId < 0 || x.EventId < 0));
-                foreach (var associatedRecord in associatedRecords)
+                var o = new IntegrationMessageConverterService(payload.ToString(), dbContext);
+
+                if (o.Detail.AssessmentId < 0 || o.Detail.EventId < 0)
                 {
-                    associatedRecord.AssessmentId = o.Detail.AssessmentId;
-                    associatedRecord.EventId = o.Detail.EventId;
+                    var associatedRecords = dbContext.EventDetailHistory
+                        .Where(x => x.IntegrationId == o.Detail.IntegrationId && (x.AssessmentId < 0 || x.EventId < 0));
+                    foreach (var associatedRecord in associatedRecords)
+                    {
+                        associatedRecord.AssessmentId = o.Detail.AssessmentId;
+                        associatedRecord.EventId = o.Detail.EventId;
+                    }
+                    await dbContext.SaveChangesAsync();
                 }
+
+                //determine user
+                var user = await UserService.GetUserAsync(dbContext, o.Detail.User.UserName);
+                o.Detail.User = user;
+                o.Detail.HistoryType = "HIVE";
+
+                await dbContext.EventDetailHistory.AddAsync(o.Detail);
                 await dbContext.SaveChangesAsync();
+
+                //int eventId, string userId, string historyType, string message, string created)
+                await hubContext.Clients.All.SendAsync("note",
+                    o.Detail.EventId,
+                    user.UserName,
+                    o.Detail.HistoryType,
+                    o.Detail.Message,
+                    o.Detail.Created.ToString(CultureInfo.InvariantCulture)
+                );
             }
-
-            //determine user
-            var user = await UserService.GetUserAsync(dbContext, o.Detail.User.UserName);
-            o.Detail.User = user;
-            o.Detail.HistoryType = "HIVE";
-
-            await dbContext.EventDetailHistory.AddAsync(o.Detail);
-            await dbContext.SaveChangesAsync();
-
-            //int eventId, string userId, string historyType, string message, string created)
-            await hubContext.Clients.All.SendAsync("note",
-                o.Detail.EventId,
-                user.UserName,
-                o.Detail.HistoryType,
-                o.Detail.Message,
-                o.Detail.Created.ToString(CultureInfo.InvariantCulture)
-            );
+            catch (Exception e)
+            {
+                log.Error(e);
+            }
         }
 
         public static async Task<string> Fix(ApplicationDbContext dbContext)

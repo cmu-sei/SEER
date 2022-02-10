@@ -36,11 +36,11 @@ namespace Seer.Areas.Admin.Controllers
         }
 
         [HttpGet("coverpage")]
-        public async Task<ActionResult> CoverPage()
+        public ActionResult CoverPage()
         {
             return View();
         }
-        
+
         [HttpGet]
         public async Task<ActionResult> Index()
         {
@@ -57,120 +57,122 @@ namespace Seer.Areas.Admin.Controllers
                 .Include(x => x.DataPoints)
                 .FirstOrDefaultAsync(o => o.Id == 1);
 
-            foreach (var element in c.Operations)
+            if (c != null)
             {
-                foreach (var a in element.Assessments)
+                foreach (var element in c.Operations)
                 {
-                    if (a.Id != this.AssessmentId) continue;
-
-                    var assessmentTimeService = new AssessmentTimeService(this._db);
-                    await assessmentTimeService.Get(this.AssessmentId.Value);
-                    var time = assessmentTimeService.Time;
-
-                    if (!time.StartTime.HasValue) continue;
-
-                    a.ExecutionTime = time.StartTime.Value;
-                    foreach (var timeHistory in time.History.Where(timeHistory =>
-                        timeHistory.Type == AssessmentTimesHistory.AssessmentTimesHistoryType.Start))
+                    foreach (var a in element.Assessments)
                     {
-                        a.ExecutionTime = timeHistory.Created;
-                    }
+                        if (a.Id != this.AssessmentId) continue;
 
-                    foreach (var assessmentEvent in a.Events)
-                    {
-                        assessmentEvent.History = await this._db.EventDetailHistory.Include(x => x.User)
-                            .Where(x => x.EventId == assessmentEvent.Id && x.Status == EventDetailHistory.EventHistoryStatus.NotReviewedAccepted)
-                            .OrderBy(x => x.Created)
-                            .ToListAsync();
+                        var assessmentTimeService = new AssessmentTimeService(this._db);
+                        await assessmentTimeService.Get(this.AssessmentId.Value);
+                        var time = assessmentTimeService.Time;
 
-                        foreach (var d in assessmentEvent.Details)
+                        if (!time.StartTime.HasValue) continue;
+
+                        a.ExecutionTime = time.StartTime.Value;
+                        foreach (var timeHistory in time.History.Where(timeHistory =>
+                                     timeHistory.Type == AssessmentTimesHistory.AssessmentTimesHistoryType.Start))
                         {
-                            if (!string.IsNullOrEmpty(d.AssociatedSCTs))
+                            a.ExecutionTime = timeHistory.Created;
+                        }
+
+                        foreach (var assessmentEvent in a.Events)
+                        {
+                            assessmentEvent.History = await this._db.EventDetailHistory.Include(x => x.User)
+                                .Where(x => x.EventId == assessmentEvent.Id && x.Status == EventDetailHistory.EventHistoryStatus.NotReviewedAccepted)
+                                .OrderBy(x => x.Created)
+                                .ToListAsync();
+
+                            foreach (var d in assessmentEvent.Details)
                             {
-                                foreach (var sct in d.AssociatedSCTs.Split(Convert.ToChar(",")))
+                                if (!string.IsNullOrEmpty(d.AssociatedSCTs))
                                 {
-                                    var s = await _db.METScts.FirstOrDefaultAsync(x => x.Id == Convert.ToInt32(sct));
-                                    if (s == null) continue;
-                                    foreach (var met in a.METs)
+                                    foreach (var sct in d.AssociatedSCTs.Split(Convert.ToChar(",")))
                                     {
-                                        foreach (var metItems in met.METItems)
+                                        var s = await _db.METScts.FirstOrDefaultAsync(x => x.Id == Convert.ToInt32(sct));
+                                        if (s == null) continue;
+                                        foreach (var met in a.METs)
                                         {
-                                            foreach (var metItemSct in metItems.METSCTs)
+                                            foreach (var metItems in met.METItems)
                                             {
-                                                if (metItemSct.Id == s.Id)
+                                                foreach (var metItemSct in metItems.METSCTs)
                                                 {
-                                                    s.Score = metItemSct.Score;
+                                                    if (metItemSct.Id == s.Id)
+                                                    {
+                                                        s.Score = metItemSct.Score;
+                                                    }
                                                 }
                                             }
                                         }
+
+                                        d.SCTs.Add(s);
                                     }
-
-                                    d.SCTs.Add(s);
                                 }
-                            }
 
-                            if (!string.IsNullOrEmpty(d.AssociatedQuizQuestions))
-                            {
-                                foreach (var quiz in d.AssociatedQuizQuestions.Split(Convert.ToChar(",")))
+                                if (!string.IsNullOrEmpty(d.AssociatedQuizQuestions))
                                 {
-                                    var s = _db.Questions.FirstOrDefault(x => x.Id == Convert.ToInt32(quiz));
-                                    if (s == null) continue;
-                                    foreach (var assessmentQuizzes in a.Quizzes)
+                                    foreach (var quiz in d.AssociatedQuizQuestions.Split(Convert.ToChar(",")))
                                     {
-                                        foreach (var assessmentQuestion in assessmentQuizzes.Questions)
+                                        var s = _db.Questions.FirstOrDefault(x => x.Id == Convert.ToInt32(quiz));
+                                        if (s == null) continue;
+                                        foreach (var assessmentQuizzes in a.Quizzes)
                                         {
-                                            if (assessmentQuestion.Id == s.Id)
+                                            foreach (var assessmentQuestion in assessmentQuizzes.Questions)
                                             {
-                                                s.AnsweredIndex = assessmentQuestion.AnsweredIndex;
-                                                s.AnsweredBy = assessmentQuestion.AnsweredBy;
-                                                s.AnsweredText = assessmentQuestion.AnsweredText;
-                                                s.AnswerStatus = assessmentQuestion.AnswerStatus;
+                                                if (assessmentQuestion.Id == s.Id)
+                                                {
+                                                    s.AnsweredIndex = assessmentQuestion.AnsweredIndex;
+                                                    s.AnsweredBy = assessmentQuestion.AnsweredBy;
+                                                    s.AnsweredText = assessmentQuestion.AnsweredText;
+                                                    s.AnswerStatus = assessmentQuestion.AnswerStatus;
+                                                }
                                             }
                                         }
-                                    }
 
-                                    d.QuizQuestions.Add(s);
+                                        d.QuizQuestions.Add(s);
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    foreach (var quiz in a.Quizzes)
-                    {
-                        foreach (var question in quiz.Questions)
+                        foreach (var quiz in a.Quizzes)
                         {
-                            var answers = await _db.Answers.Where(o => o.QuestionId == question.Id).OrderByDescending(o => o.Created)
-                                .ToListAsync();
-                            foreach (var answer in answers)
+                            foreach (var question in quiz.Questions)
                             {
-                                var user = await _db.Users.FirstOrDefaultAsync(o => o.Id == answer.UserId);
+                                var answers = await _db.Answers.Where(o => o.QuestionId == question.Id).OrderByDescending(o => o.Created)
+                                    .ToListAsync();
+                                foreach (var answer in answers)
+                                {
+                                    var user = await _db.Users.FirstOrDefaultAsync(o => o.Id == answer.UserId);
 
-                                question.AnsweredBy = $"{user.FirstName} {user.LastName}";
-                                question.AnsweredIndex = answer.AnsweredIndex;
-                                question.AnsweredText = answer.AnsweredText;
-                                question.AnswerStatus = answer.Status;
-                                question.HintTaken = !(string.IsNullOrEmpty(answer.HintTakenBy));
+                                    question.AnsweredBy = $"{user.FirstName} {user.LastName}";
+                                    question.AnsweredIndex = answer.AnsweredIndex;
+                                    question.AnsweredText = answer.AnsweredText;
+                                    question.AnswerStatus = answer.Status;
+                                    question.HintTaken = !(string.IsNullOrEmpty(answer.HintTakenBy));
 
-                                break;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    foreach (var met in a.METs)
-                    {
-                        foreach (var item in met.METItems)
+                        foreach (var met in a.METs)
                         {
-                            foreach (var sct in item.METSCTs)
+                            foreach (var item in met.METItems)
                             {
-                                var score = await _db.METItemSCTScores.OrderByDescending(o => o.Created)
-                                    .FirstOrDefaultAsync(o => o.SCTId == sct.Id);
-                                sct.Score = score;
+                                foreach (var sct in item.METSCTs)
+                                {
+                                    var score = await _db.METItemSCTScores.OrderByDescending(o => o.Created)
+                                        .FirstOrDefaultAsync(o => o.SCTId == sct.Id);
+                                    sct.Score = score;
+                                }
                             }
                         }
                     }
                 }
             }
-
             return View(c);
         }
 
@@ -184,6 +186,7 @@ namespace Seer.Areas.Admin.Controllers
             {
                 item.History = await this._db.EventDetailHistory.Where(x => x.EventId == item.Id).ToListAsync();
             }
+
             return View("User", exerciseEvents);
         }
 
@@ -231,7 +234,7 @@ namespace Seer.Areas.Admin.Controllers
         [HttpGet("compare")]
         public async Task<IActionResult> Compare(string assessmentIds)
         {
-            var ids = new List<int>();
+            List<int> ids;
             try
             {
                 ids = assessmentIds.Split(Convert.ToChar(",")).Select(o => Convert.ToInt32(o)).ToList();
@@ -277,7 +280,7 @@ namespace Seer.Areas.Admin.Controllers
 
             var executionTime = time.StartTime;
             foreach (var timeHistory in time.History.Where(timeHistory => timeHistory.Type == AssessmentTimesHistory.AssessmentTimesHistoryType.Start)
-            )
+                    )
             {
                 executionTime = timeHistory.Created;
             }
@@ -303,7 +306,8 @@ namespace Seer.Areas.Admin.Controllers
                         if (duration > new TimeSpan(0, 0, 0, Convert.ToInt32(assessmentTimeService.Time.ElapsedTime)))
                         {
                             //duration = assessmentTimeService.Time.ElapsedSeconds - (event started seconds)
-                            duration = new TimeSpan(0, 0, 0, Convert.ToInt32(assessmentTimeService.Time.ElapsedTime - ev.TimeStart.Value.TotalSeconds));
+                            duration = new TimeSpan(0, 0, 0,
+                                Convert.ToInt32(assessmentTimeService.Time.ElapsedTime - ev.TimeStart.Value.TotalSeconds));
                         }
 
                         if (new[] { "step-admin", "hive_admin" }.Contains(resource.HiveObject.BaseObject.UpdatedBy)) continue;
