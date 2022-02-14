@@ -12,6 +12,7 @@ DM21-0384
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +20,8 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Seer.Infrastructure.Data;
+using Seer.Infrastructure.Enums;
+using Seer.Infrastructure.Extensions;
 using Seer.Infrastructure.Models;
 
 namespace Seer.Areas.EO.Controllers;
@@ -35,17 +38,65 @@ public class MeasureController :  BaseController
     [HttpGet]
     public async Task<ActionResult> Index()
     {
+        var m = await _db.METs
+            .Include(x => x.METItems)
+            .ThenInclude(x => x.METSCTs)
+            .FirstOrDefaultAsync(o => o.AssessmentId == this.AssessmentId.Value);
+
+        if (m == null)
+        {
+            //build new METL
+            var met = new MET { Name = "", Created = DateTime.UtcNow, AssessmentId = this.AssessmentId.Value };
+
+            //load file from local config
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "config", "metl.txt");
+            if (System.IO.File.Exists(path))
+            {
+                var content = await System.IO.File.ReadAllTextAsync(path);
+                var lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+                var metItem = new METItem();
+                var metIndex = 1;
+                var sctIndex = 1;
+
+                foreach (var line in lines)
+                {
+                    var processedLine = line.Trim();
+
+                    if (line.StartsWith("\t") || line.StartsWith(" "))
+                    {
+                        metItem.METSCTs.Add(new METItemSCT { Index = sctIndex, Name = processedLine, Status = ActiveStatus.Active, Title = "Step"});
+                        sctIndex++;
+                    }
+                    else
+                    {
+                        metItem = new METItem { Index = metIndex, Name = processedLine };
+                        metIndex++;
+                        sctIndex = 1;
+                    }
+
+                    met.METItems.Add(metItem);
+                }
+
+                await _db.METs.AddAsync(met);
+            }
+
+            await _db.SaveChangesAsync();
+
+            return Redirect(Request.Path);
+        }
+        
         var events = await _db.Events.Where(x => x.AssessmentId == this.AssessmentId).OrderBy(x => x.DisplayOrder).ToListAsync();
         var mets = await _db.METs.Include(x=>x.METItems).ThenInclude(x=>x.METSCTs).Where(x => x.AssessmentId == this.AssessmentId).ToListAsync();
         ViewBag.METs = mets;
 
-        var scores = new Dictionary<int, METItemSCTScore>();
+        var scores = new List<METItemSCTScore>();
         foreach (var evt in events.Where(evt => !string.IsNullOrEmpty(evt.AssociatedSCTs)))
         {
-            var score = await _db.METItemSCTScores.OrderByDescending(x=>x.Created).FirstOrDefaultAsync(x => x.SCTId == Convert.ToInt32(evt.AssociatedSCTs));
-            if (score != null)
+            var sctIds = evt.AssociatedSCTs.ToIntList();
+            foreach(var score in _db.METItemSCTScores.OrderByDescending(x=>x.Created).Where(x => sctIds.Contains(x.SCTId)))
             {
-                scores.Add(evt.Id, score);
+                scores.Add(score);
             }
         }
 

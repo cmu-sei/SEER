@@ -85,6 +85,8 @@ namespace Seer.Infrastructure.Models
         public Score SCTScore { get; set; }
         public int METId { get; set; }
         public int SCTId { get; set; }
+        
+        public int AssessmentEventId { get; set; }
         public string Comments { get; set; }
         public string UserId { get; set; }
         public DateTime Created { get; set; } = DateTime.UtcNow;

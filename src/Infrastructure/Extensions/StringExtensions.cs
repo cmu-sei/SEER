@@ -143,5 +143,15 @@ namespace Seer.Infrastructure.Extensions
         {
             return o.Contains("@") ? o.ToLower() : $"{o}@site.local".ToLower();
         }
+        
+        public static IEnumerable<int> ToIntList(this string str) {
+            if (string.IsNullOrEmpty(str))
+                yield break;
+
+            foreach(var s in str.Split(',')) {
+                if (int.TryParse(s, out var num))
+                    yield return num;
+            }
+        }
     }
 }

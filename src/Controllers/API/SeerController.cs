@@ -124,12 +124,16 @@ namespace Seer.Controllers.API
         /// gets event history
         /// </summary>
         /// <param name="assessmentId"></param>
+        /// <param name="filter">HIVE, etc.</param>
         /// <returns></returns>
         [HttpGet("assessments/{assessmentId}/history")]
         [ProducesResponseType(typeof(Task<IActionResult>), (int)HttpStatusCode.OK)]
-        public IActionResult EventHistoryGet(int assessmentId)
+        public IActionResult EventHistoryGet(int assessmentId, string filter)
         {
-            return Ok(this._db.EventDetailHistory.Include(x => x.User).Where(x => x.AssessmentId == assessmentId).ToList());
+            var o = this._db.EventDetailHistory.Include(x => x.User).Where(x => x.AssessmentId == assessmentId);
+            if (!string.IsNullOrEmpty(filter))
+                o = o.Where(x => x.HistoryType == filter);
+            return Ok(o.ToList());
         }
 
         [HttpPost("assessments/{assessmentId}/events/{eventId}/delete")]

@@ -41,4 +41,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Areas\EO\Views\TrainingAndEvaluation\Index.cshtml" />
+  </ItemGroup>
 </Project>

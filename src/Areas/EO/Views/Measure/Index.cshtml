@@ -10,19 +10,30 @@ Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Off
 DM21-0384
 *@
 
-@using Seer.Infrastructure.Enums
+@using Seer.Infrastructure.Extensions
 @using Seer.Infrastructure.Models
 @model IEnumerable<Seer.Infrastructure.Models.Event>
 
 @{
     ViewBag.Title = "Assessment Events";
+
+    static string Ellipsis(string text, int length)
+    {
+        if (text.Length <= length) return text;
+        var pos = text.IndexOf(" ", length, StringComparison.Ordinal);
+        return pos >= 0 ? $"{text[..pos]}..." : text;
+    }
 }
 
 <style>
     .table-sm * {font-size: small;}
-    .history_table {margin-left:25px;}
+    .history_table {margin-left:5px;}
     .history_table * { border: 0 !important; font-size: 11px; word-wrap: anywhere; }
     .history_icon img {width: 24px; margin: 0; padding: 0;}
+    .tabs * {color: #0d6efd !important}
+    .card-header {font-weight: bolder;}
+    .card {font-size: smaller;}
+    .tab-content {padding: 20px;}
 </style>
 
 <h2>
@@ -31,73 +42,89 @@ DM21-0384
 
 <div class="row" style="margin-top: 30px">
     <div class="col-sm-12">
-        <table class="table table-sm table-striped" id="main">
-            <thead>
-            <tr>
-                <td class="col-1">Event</td>
-                <td class="col-5">Description</td>
-                <td class="col-2">MET</td>
-                <td class="col-1">Step</td>
-                <td class="col-1">Measure</td>
-                <td class="col-2">Notes</td>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model)
-            {
-                var metId = -1;
-                var sctId = -1;
-                var measure = METItemSCTScore.Score.NA;
-                var comments = "";
-                foreach (var (_, value) in ((Dictionary<int, METItemSCTScore>)ViewBag.Scores).Where(score => score.Key == item.Id))
-                {
-                    metId = value.METId;
-                    sctId = value.SCTId;
-                    measure = value.SCTScore;
-                    comments = value.Comments;
-                    //<text>@item.Id / @value.Id</text>
-                    break;
-                }
 
-                <tr>
-                    <td title="@item.Id">
-                        @item.Name
-                    </td>
-                    <td>
-                        @item.ExtendedName
-                        <table id="history-@item.Id" data-id="@item.Id" class="history history_table"></table>
-                    </td>
-                    <td>
-                        <select class="met form-control form-control-sm option" id="met-@item.Id" data-id="@item.Id" data-selected="@metId">
-                            @foreach (var met in ViewBag.METs)
+        @foreach (var item in Model)
+        {
+            <div class="card">
+                <div class="card-header">@item.Name</div>
+                <div class="card-body">
+                    <p class="card-text">@item.ExtendedName</p>
+                    <ul class="tabs nav nav-tabs" id="mt-@item.Id" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="home-tab-@item.Id" data-bs-toggle="tab" data-bs-target="#home-@item.Id" type="button" role="tab" aria-controls="home-@item.Id" aria-selected="true">Ratings --></button>
+                        </li>
+                        @foreach (var met in ViewBag.METs)
+                        {
+                            IEnumerable<METItem> metItems = met.METItems;
+                            foreach (var metItem in metItems.OrderBy(x => x.Index))
                             {
-                                <option value="0">Select a MET</option>
-                                foreach (var metItem in met.METItems)
-                                {
-                                    <option value="@metItem.Id" @if(metId == metItem.Id){<text>selected="selected"</text>}>@metItem.Name</option>
-                                }
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="t-@(item.Id)-@(met.Id)-@metItem.Id" data-bs-toggle="tab" data-bs-target="#h-@(item.Id)-@(met.Id)-@metItem.Id" type="button" role="tab" aria-controls="#h-@(item.Id)-@(met.Id)-@metItem.Id" aria-selected="false">@Ellipsis(metItem.Name, 40)</button>
+                                </li>
                             }
-                        </select>
-                    </td>
-                    <td>
-                        <select class="step form-control form-control-sm option" id="step-@item.Id" data-id="@item.Id" disabled="disabled" data-selected="@sctId"></select>
-                    </td>
-                    <td>
-                        <select class="status form-control form-control-sm option" id="status-@item.Id" data-id="@item.Id" disabled="disabled">
-                            <option value="0" @if(measure==METItemSCTScore.Score.NA){<text>selected="selected"</text>}>Select</option>
-                            <option value="1" @if(measure==METItemSCTScore.Score.Go){<text>selected="selected"</text>}>GO</option>
-                            <option value="2" @if(measure==METItemSCTScore.Score.NoGo){<text>selected="selected"</text>}>NO GO</option>
-                            <option value="3" @if(measure==METItemSCTScore.Score.Partial){<text>selected="selected"</text>}>PARTIAL</option>
-                            <option value="9" @if(measure==METItemSCTScore.Score.NA){<text>selected="selected"</text>}>N/A</option>
-                        </select>
-                    </td>
-                    <td>
-                        <textarea class="comments form-control form-control-sm option" style="height:1em" id="comments-@item.Id" data-id="@item.Id" disabled="disabled">@comments</textarea>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+                        }
+                    </ul>
+                    <div class="tab-content" id="mtc-@item.Id">
+                        <div class="tab-pane fade show active" id="home-@item.Id" role="tabpanel" aria-labelledby="home-@item.Id-tab">
+                            <div class="spinner-grow text-light" role="status" id="history-loading-@item.Id">
+                              <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <table id="history-@item.Id" data-id="@item.Id" class="history history_table"></table>
+                        </div>
+                        @foreach (var met in ViewBag.METs)
+                        {
+                            IEnumerable<METItem> metItems = met.METItems;
+                            foreach (var metItem in metItems.OrderBy(x => x.Index))
+                            {
+                                <div class="tab-pane fade" id="h-@(item.Id)-@(met.Id)-@metItem.Id" role="tabpanel" aria-labelledby="t-@(item.Id)-@(met.Id)-@metItem.Id">
+                                    <table class="table table-sm">
+                                        @{
+                                            foreach (var sct in metItem.METSCTs.OrderBy(x => x.Index))
+                                            {
+                                                var measure = 0;
+                                                var comments = "";
+
+                                                var associatedScts = item.AssociatedSCTs.ToIntList();
+                                                foreach (var score in ((IEnumerable<METItemSCTScore>)ViewBag.Scores).Where(score => score.SCTId == sct.Id && associatedScts.Contains(sct.Id) && score.AssessmentEventId == item.Id))
+                                                {
+                                                    measure = (int)score.SCTScore;
+                                                    comments = score.Comments;
+                                                    break;
+                                                }
+                                                <tr title="item: @item.Id sct: @sct.Id">
+                                                    <td>@sct.Name</td>
+                                                    <td>
+                                                        <select class="status form-control form-control-sm option" id="status-@item.Id-@sct.Id">
+                                                            <option value="0">Provide Rating...</option>
+                                                            <option value="1"
+                                                                    @if (measure == (int)METItemSCTScore.Score.Go)
+                                                                    {<text>selected="selected"</text>}>GO</option>
+                                                            <option value="2"
+                                                                    @if (measure == (int)METItemSCTScore.Score.NoGo)
+                                                                    {<text>selected="selected"</text>}>NO GO</option>
+                                                            <option value="3"
+                                                                    @if (measure == (int)METItemSCTScore.Score.Partial)
+                                                                    {<text>selected="selected"</text>}>PARTIAL</option>
+                                                            <option value="9"
+                                                                    @if (measure == (int)METItemSCTScore.Score.NA)
+                                                                    {<text>selected="selected"</text>}>N/A</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <textarea class="comments form-control form-control-sm option" style="height:1em" id="comments-@item.Id-@sct.Id">@comments</textarea>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </table>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+            <br/>
+        }
     </div>
 </div>
 
@@ -150,52 +177,15 @@ DM21-0384
         
         let groupId = $("#groupid").val();
         let assessmentId = $("#assessmentid").val();
-        let steps = [];
-        
-        @foreach (var met in ViewBag.METs)
-        {
-            foreach (var mItems in met.METItems)
-            {
-                foreach (var sct in mItems.METSCTs)
-                {
-                    <text>steps.push([@mItems.Id, @sct.Id, '@sct.Name']);</text>
-                }
-            }
-        }
-        
-        /// load
-        $(".met").each(function () {
-            let control = $(this);
-            let itemId = control.data("id");
-            let metId = Number(control.data("selected"));
-            if (metId>0){
-                o = "#step-" + itemId;
-                let selectedSct = $(o).data("selected");
-                $(o).find('option').remove();
-                $(o).append($('<option>', {value:0}).text("Choose a Step"));
-                for (const item of steps) {
-                    if (item[0] == control.val()) {
-                        opt = document.createElement('option');
-                        opt.value = item[1];
-                        opt.innerHTML = item[2];
-                        if (item[1] == selectedSct)
-                            opt.selected = true;
-                        $(o).append(opt);
-                    }
-                }
-                $(o).prop('disabled', false);
-                $("#status-" + itemId).prop('disabled', false);
-                $("#comments-" + itemId).prop('disabled', false);
-            }
-        });
-        
+                
         //history
         var qs = getQueryStrings();
         if (qs["view"] !== "condensed"){ 
-            $.getJSON('/api/seer/assessments/@ViewBag.AssessmentId/history', function(data) {
+            $.getJSON('/api/seer/assessments/@ViewBag.AssessmentId/history?filter=HIVE', function(data) {
                 $('.history').each(function(i, obj) {
                     let x = $(this);
                     let eventId = x.data("id");
+                    console.log(eventId);
                     $.each(data, function(key, val){
                         if (val.eventId === eventId){
                             let u = val.user;
@@ -206,44 +196,12 @@ DM21-0384
                             x.prepend(formatHistoryItem(eventId, val.historyType, val.created, fName, val.message.replace("<", "")));
                         }
                     })
+                    if (typeof eventId !== "undefined") {
+                        $('#history-loading-' + eventId).hide(); 
+                    }
                 })
             });
         }
-        
-        $(".met").change(function () {
-            let control = $(this);
-            let itemId = control.data("id");
-            
-            o = "#step-" + itemId;
-            $(o).prop('disabled', false);
-            let selectedSct = $(o).data("selected");
-            
-            $(o).find('option').remove();
-            $(o).append($('<option>', {value:0}).text("Choose a Step"));
-            for (const item of steps) {
-                if (item[0] == control.val()) {
-                    opt = document.createElement('option');
-                    opt.value = item[1];
-                    opt.innerHTML = item[2];
-                    if (item[1] == selectedSct)
-                        opt.selected = true;
-                    $(o).append(opt);
-                }
-            }
-        });
-        
-        $(".step").change(function () {
-            let control = $(this);
-            let itemId = control.data("id");
-            let val = parseInt(control.val());
-            if(val > 0) {
-                $("#status-" + itemId).prop('disabled', false);
-                $("#comments-" + itemId).prop('disabled', false);
-            } else {
-                $("#status-" + itemId).prop('disabled', true);
-                $("#comments-" + itemId).prop('disabled', true);
-            }
-        });
         
         const hub = new signalR.HubConnectionBuilder()
                 .withUrl("/hubs/measure?groupid=" + groupId + "&assessmentid=" + assessmentId)
@@ -251,27 +209,27 @@ DM21-0384
                 .build();
 
         $(".status").on("change", null, function () {
-            let o = Split(this.id);
-            o = o[1];
-            score(o);
+            preScore(this);
         });
         
         $(".comments").on("change", null, function () {
-            let o = Split(this.id);
-            o = o[1];
-            score(o);
+            preScore(this);
         });
         
-        function score(o) {
-            console.log(o)
-            console.log($("#step-" + o).val())
-            console.log($("#comments-" + o).val())
-            console.log($("#status-" + o).val())
-            hub.invoke("Measure", Number(o), Number($("#step-" + o).val()), $("#comments-" + o).val(), Number($("#status-" + o).val()));
+        function preScore(o){
+            let sctId = Split(o.id);
+            let eventId = sctId[1];
+            sctId = sctId[2];
+            score(eventId, sctId);
+        }
+        
+        function score(eventId, sctId) {
+            console.log(eventId, sctId)
+            hub.invoke("Measure", Number(eventId), Number(sctId), $("#comments-" + eventId + "-" + sctId).val(), Number($("#status-" + eventId + "-" + sctId).val()));
         }
         
         hub.on("Measure", function (x, id, comment, status) {
-            console.log("hub returned: " + x,  id, comment + " " + status);
+            console.table("hub returned: " + x,id,comment,status);
         });
     
         hub.start().catch(err => console.error(err.toString()));

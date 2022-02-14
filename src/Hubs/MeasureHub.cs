@@ -9,6 +9,7 @@ DM21-0384
 */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ using Seer.Infrastructure.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Seer.Infrastructure.Data;
+using Seer.Infrastructure.Extensions;
 
 namespace Seer.Hubs
 {
@@ -36,7 +38,7 @@ namespace Seer.Hubs
             
             var sct = await this._context.METScts.FirstOrDefaultAsync(x => x.Id == sctId);
             
-            var s = await this._context.METItemSCTScores.FirstOrDefaultAsync(x => x.SCTId == sctId);
+            var s = await this._context.METItemSCTScores.FirstOrDefaultAsync(x => x.SCTId == sctId && x.AssessmentEventId == eventId);
             if (s == null)
             {
                 s = new METItemSCTScore
@@ -44,6 +46,7 @@ namespace Seer.Hubs
                     Comments = comment,
                     METId = sct.MetItemId,
                     SCTId = sctId,
+                    AssessmentEventId = eventId,
                     SCTScore = (METItemSCTScore.Score)status,
                     UserId = userId
                 };
@@ -61,7 +64,12 @@ namespace Seer.Hubs
 
             if (assessmentEvent != null)
             {
-                assessmentEvent.AssociatedSCTs = sctId.ToString();
+                var sctIds = assessmentEvent.AssociatedSCTs.ToIntList().ToList();
+                if (!sctIds.Contains(sctId))
+                {
+                    sctIds.Add(sctId);
+                }
+                assessmentEvent.AssociatedSCTs = string.Join(",", sctIds);
                 this._context.Update(assessmentEvent);
                 
                 var historyItem = new EventDetailHistory
