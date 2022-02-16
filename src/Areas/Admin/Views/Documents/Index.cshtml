@@ -27,7 +27,7 @@
 
 @Html.ValidationSummary(true)
 
-@if (!Model.Any())
+@if (!Model!.Any())
 {
     <p>No documents found - would you like to upload something?</p>
 }

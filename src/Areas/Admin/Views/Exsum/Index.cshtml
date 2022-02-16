@@ -43,7 +43,7 @@ DM21-0384
             //     return string.Empty;
             // }
 
-            created = Convert.ToDouble(o.StartDate).FromJavaTimeStampToDateTime();
+            created = Convert.ToDouble(o!.StartDate).FromJavaTimeStampToDateTime();
             
             if (string.IsNullOrEmpty(o.BaseObject.UpdatedBy) || o.BaseObject.UpdatedBy.StartsWith("step-admin") || o.BaseObject.UpdatedBy.StartsWith("hive_admin"))
             {
@@ -304,7 +304,7 @@ DM21-0384
                 </table>
                 @if (assessmentReportEvent.AssociatedSCTs != null)
                             {
-                                foreach (var sct in assessmentReportEvent.AssociatedSCTs)
+                                foreach (var _ in assessmentReportEvent.AssociatedSCTs)
                                 {
                                     <br/>
                                     <table class="table-nostyle offset-sm-2 table-nl">

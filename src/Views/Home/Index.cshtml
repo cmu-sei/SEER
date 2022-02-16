@@ -11,31 +11,25 @@
 *@
 
 @model Seer.Infrastructure.ViewModels.HomeViewModel
-@using Seer.Infrastructure.Enums
 
 <style>
-    .card-columns {
-        column-count: 2;
-    }
-
-    .card * {
-        text-align: left;
-    }
+    .card-columns { column-count: 2; }
+    .card * { text-align: left; }
 </style>
 
-@if (this.User.Identity.IsAuthenticated)
+@if (this.User.Identity!.IsAuthenticated)
 {
-    if (Model.Groups.Any())
+    if (Model!.Groups.Any())
     {
         <h3>
-    <i class="fa fa-check-circle" aria-hidden="true"></i>
-    You are enrolled in the following assessments as a participant:
-</h3>
+            <i class="fa fa-check-circle" aria-hidden="true"></i>
+            You are enrolled in the following assessments as a participant:
+        </h3>
         <p>
-    Click on the active event of your choice below in order to begin. Check with your administrator regarding updates for currently inactive events.
-</p>
+            Click on the active event of your choice below in order to begin. Check with your administrator regarding updates for currently inactive events.
+        </p>
         <div class="card-columns">
-    @foreach (var group in Model.Groups)
+            @foreach (var group in Model.Groups)
             {
                 foreach (var assessment in group.Assessments)
                 {
@@ -46,7 +40,7 @@
                     }
 
                     <div class="card">
-                        <a href="@Url.Action("SetAssessment", "Home", new {id = assessment.Id})" class="btn btn-block btn-@style">
+                        <a href="@Url.Action("SetAssessment", "Home", new { id = assessment.Id })" class="btn btn-block btn-@style">
                             <i class="fa fa-play-circle" aria-hidden="true"></i>
                             EO: <strong>@group.Name - @assessment.Name</strong> (@assessment.Status)
                         </a>
@@ -58,13 +52,13 @@
     else
     {
         <div style="margin:20px 0">
-    <strong>You are not enrolled in any event currently</strong>
-</div>
+            <strong>You are not enrolled in any events currently</strong>
+        </div>
     }
 }
 else
 {
     <p>
-    Please <a href="@Url.Action("Login", "Account")">Login</a> to continue.
-</p>
+        Please <a href="@Url.Action("Login", "Account")">Login</a> to continue.
+    </p>
 }

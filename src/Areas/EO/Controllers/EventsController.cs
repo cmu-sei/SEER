@@ -8,7 +8,6 @@ Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Off
 DM21-0384 
 */
 
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;

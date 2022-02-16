@@ -147,9 +147,10 @@ namespace Seer.Infrastructure.Services
                     history.Message = x.Detail.Message;
 
                     var o = JsonConvert.DeserializeObject<HiveObject>(history.IntegrationObject);
-                    if (!string.IsNullOrEmpty(o.BaseObject.UpdatedBy))
+                    if (!string.IsNullOrEmpty(o!.BaseObject.UpdatedBy))
                     {
-                        var u = dbContext.Users.FirstOrDefault(x => x.Email.ToUpper() == o.BaseObject.UpdatedBy.ToUpper());
+                        var u = dbContext.Users.FirstOrDefault(z =>
+                            string.Equals(z.Email, o.BaseObject.UpdatedBy, StringComparison.InvariantCultureIgnoreCase));
                         if (u != null)
                         {
                             history.User = u;

@@ -14,7 +14,7 @@
 
 @{
     ViewBag.Title = "Choose Teams to Compare";
-    var assessments = Model.ToList().OrderBy(x => x.AssessmentName);
+    var assessments = Model!.ToList().OrderBy(x => x.AssessmentName);
 }
 
 <h2>@ViewBag.Title</h2>

@@ -29,70 +29,70 @@ DM21-0384
     <div class="col-sm-12">
         <table class="table table-sm table-striped" id="main">
             <thead>
-                <tr>
-                    <td>Event</td>
-                    <td>Description</td>
-                    <td>Event&nbsp;Status</td>
-                    <td class="con text-right">Discovery</td>
-                    <td class="co text-right">Mitigation</td>
-                    <td class="co text-right">Severity</td>
-                    <td class="co text-right">Intelligence</td>
-                </tr>
+            <tr>
+                <td>Event</td>
+                <td>Description</td>
+                <td>Event&nbsp;Status</td>
+                <td class="con text-right">Discovery</td>
+                <td class="co text-right">Mitigation</td>
+                <td class="co text-right">Severity</td>
+                <td class="co text-right">Intelligence</td>
+            </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>
-                            @{
-                                if (item.CatalogId > 0)
-                                {
-                                    <a href="@Url.Action("Detail", "Events", new {Area = "EO", Id = @item.Id})">
-                                        @item.Name
-                                    </a>                                    
-                                }
-                                else
-                                {
-                                    <span title="This event cannot be scored">@item.Name</span>
-                                }
+            @foreach (var item in Model!)
+            {
+                <tr>
+                    <td nowrap="nowrap">
+                        @{
+                            if (item.CatalogId > 0)
+                            {
+                                <a href="@Url.Action("Detail", "Events", new { Area = "EO", item.Id })">
+                                    @item.Name
+                                </a>
                             }
-                        </td>
-                        <td>@item.ExtendedName</td>
-                        <td class="td-center">
-                            @{
-                                var status = string.Empty;
-                                var icon = "fa-feather";
-                                if (item.TimeStart.HasValue && item.TimeEnd.HasValue)
-                                {
-                                    status = "ok";
-                                    icon = "fa-check-circle";
-                                }
-                                else if (item.TimeStart.HasValue && !item.TimeEnd.HasValue)
-                                {
-                                    status = "warn";
-                                    icon = "fa-check-circle";
-                                }
-                                if (item.CatalogId > 0)
-                                {
-                                    <i id="status-@item.Id" class="fa @icon @status" title="@status" aria-hidden="true"></i>
-                                }
+                            else
+                            {
+                                <span title="This event cannot be scored">@item.Name</span>
                             }
-                        </td>
-                        <td class="con text-right">
-                            @($"{item.ScoreDiscovery:F2}")
-                        </td>
-                        <td class="co text-right">@($"{item.ScoreRemoval:F2}")</td>
-                        <td class="co text-right">@($"{item.ScoreSeverity:F2}")</td>
-                        <td class="co text-right">@($"{item.ScoreIntelligence:F2}")</td>
-                    </tr>
-                }
+                        }
+                    </td>
+                    <td>@item.ExtendedName</td>
+                    <td class="td-center">
+                        @{
+                            var status = string.Empty;
+                            var icon = "fa-feather";
+                            if (item.TimeStart.HasValue && item.TimeEnd.HasValue)
+                            {
+                                status = "ok";
+                                icon = "fa-check-circle";
+                            }
+                            else if (item.TimeStart.HasValue && !item.TimeEnd.HasValue)
+                            {
+                                status = "warn";
+                                icon = "fa-check-circle";
+                            }
+                            if (item.CatalogId > 0)
+                            {
+                                <i id="status-@item.Id" class="fa @icon @status" title="@status" aria-hidden="true"></i>
+                            }
+                        }
+                    </td>
+                    <td class="con text-right">
+                        @($"{item.ScoreDiscovery:F2}")
+                    </td>
+                    <td class="co text-right">@($"{item.ScoreRemoval:F2}")</td>
+                    <td class="co text-right">@($"{item.ScoreSeverity:F2}")</td>
+                    <td class="co text-right">@($"{item.ScoreIntelligence:F2}")</td>
+                </tr>
+            }
             @{
                 double total = 0, percent = 0, scoreDiscovery = 0, scoreMitigation = 0, scoreSeverity = 0, scoreIntelligence = 0;
                 if (Model.Any())
                 {
                     scoreSeverity = Model.Average(x => x.ScoreSeverity ?? 0);
                     scoreIntelligence = Model.Average(x => x.ScoreIntelligence ?? 0);
-                    
+
                     var calc = Convert.ToDouble(Model.Sum(x => x.ScoreDiscovery)) / Convert.ToDouble(Model.Count(x => x.CatalogId > 0));
                     scoreDiscovery = calc switch
                     {
@@ -112,14 +112,13 @@ DM21-0384
                         };
 
                     total = scoreDiscovery +
-                                scoreMitigation +
-                                Model.Average(x => x.ScoreSeverity ?? 0) +
-                                Model.Average(x => x.ScoreIntelligence ?? 0);
+                            scoreMitigation +
+                            Model.Average(x => x.ScoreSeverity ?? 0) +
+                            Model.Average(x => x.ScoreIntelligence ?? 0);
 
                     percent = Convert.ToDouble(total) / Convert.ToDouble(12);
                 }
             }
-            
             <tr class="bold">
                 <td colspan="3">SCORE: @($"{total:F2}") / 12.00 (@($"{percent:P}"))</td>
                 <td class="con text-right">@($"{scoreDiscovery:F2}")</td>

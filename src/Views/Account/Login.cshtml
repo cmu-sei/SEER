@@ -10,7 +10,6 @@
     DM21-0384
 *@
 
-@using RestSharp
 @{
     if (User.Identity?.IsAuthenticated ?? false)
     {
@@ -24,14 +23,11 @@
 }
 
 <style>
-    h1 {
-        font-size: 2.0em !important;
-        font-weight: bold;
-    }
+    h1 { font-size: 2.0em !important; font-weight: bold; }
 </style>
 
 <h2>Log In</h2>
-<br />
+<br/>
 <div class="row">
     <div>
         @if (!string.IsNullOrEmpty(errorMessage))
@@ -49,7 +45,5 @@
             </div>
 
         </section>
-    </div>
-    <div class="col-md-4 align-top">
     </div>
 </div>

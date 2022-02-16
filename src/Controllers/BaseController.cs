@@ -75,7 +75,7 @@ namespace Seer.Controllers
             get
             {
                 var o = this.CookieRead("a.id");
-                return !string.IsNullOrEmpty(o) ? (int?)Convert.ToInt32(o) : null;
+                return !string.IsNullOrEmpty(o) ? Convert.ToInt32(o) : null;
             }
             set => this.CookieWrite("a.id", value.ToString());
         }

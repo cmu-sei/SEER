@@ -14,7 +14,6 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Seer.Infrastructure.Data;
 using Seer.Infrastructure.Extensions;

@@ -46,7 +46,7 @@ namespace Seer.Hubs
 
         public async Task TimelineEvent(int eventId, int displayOrder, string assignedTo, string name, string extendedName, string timeScheduled)
         {
-            _logger.LogDebug($"Processing timeline event update {eventId}, {assignedTo}");
+            _logger.LogDebug("Processing timeline event update {EventId}, {AssignedTo}", eventId, assignedTo);
 
             var assessmentId = Convert.ToInt32(this.GetHttpContext().Request.Query["assessmentid"]);
 

@@ -9,7 +9,6 @@ DM21-0384
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -47,7 +46,7 @@ namespace Seer.Infrastructure.Extensions
 
         public static IEnumerable<string> GetEmails(this string o)
         {
-            var splitText = o.Split(new char[] { ' ' });
+            var splitText = o.Split(new[] { ' ' });
             var emails = splitText.Where(s => s.Contains("@"));
             return emails;
         }
