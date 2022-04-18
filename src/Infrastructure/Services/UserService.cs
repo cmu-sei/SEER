@@ -118,8 +118,11 @@ namespace Seer.Infrastructure.Services
 
                 ctx.Principal?.AddIdentity(appIdentity);
             }
-            
-            await new SquireService(db).Run(user);
+
+            if (Program.Configuration.SquireEnabled)
+            {
+                await new SquireService(db).Run(user);
+            }
         }
 
         public static async Task<User> GetUserAsync(ApplicationDbContext dbContext, string userName)
