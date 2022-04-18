@@ -64,7 +64,7 @@ namespace Seer.Infrastructure.Services
                 _log.Debug($"{ssoId}: User does not exist, creating... - {name} {email}");
                 //user does not exist, create user
 
-                user = new User { Email = email, UserName = email, Created = DateTime.UtcNow, Id = ssoId, OAuthId = ssoId };
+                user = new User { Email = email, UserName = email, Created = DateTime.UtcNow, Id = ssoId, OAuthId = ssoId, FirstName = name};
                 var id = await userManager.CreateAsync(user, "Scotty@@1!");
                 if (!id.Succeeded)
                 {
@@ -92,6 +92,8 @@ namespace Seer.Infrastructure.Services
                         }
                     }
                 }
+
+                //await new SquireService(db).Run(user);
             }
 
             if (user == null)
@@ -116,6 +118,8 @@ namespace Seer.Infrastructure.Services
 
                 ctx.Principal?.AddIdentity(appIdentity);
             }
+            
+            await new SquireService(db).Run(user);
         }
 
         public static async Task<User> GetUserAsync(ApplicationDbContext dbContext, string userName)

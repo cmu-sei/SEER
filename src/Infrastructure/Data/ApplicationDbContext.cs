@@ -91,7 +91,7 @@ namespace Seer.Infrastructure.Data
             modelBuilder.Entity<History.HistoryItem>().HasIndex(o => new { o.UserId });
             modelBuilder.Entity<IntelItem>().HasIndex(o => new { o.AssessmentId });
             
-            modelBuilder.Entity<SquireAccount>().HasIndex(o => new { o.MatchName });
+            modelBuilder.Entity<SquiredAccount>().HasIndex(o => new { o.MatchName });
             
             modelBuilder.Entity<Survey>().HasIndex(o => new { o.AssessmentId });
             modelBuilder.Entity<SurveyQuestion>().HasIndex(o => new { o.SurveyId });
@@ -141,7 +141,8 @@ namespace Seer.Infrastructure.Data
         public DbSet<QuizQuestion> Questions { get; set; }
         public DbSet<QuizConnection> QuizConnections { get; set; }
         public DbSet<Section> Sections { get; set; }
-        public DbSet<SquireAccount> SquireAccounts { get; set; }
+        public DbSet<SquiredAccount> SquiredAccounts { get; set; }
+        public DbSet<SquireIntegrations> SquireIntegrations { get; set; }
         public DbSet<Survey> Surveys { get; set; }
         public DbSet<SurveyQuestion> SurveyQuestions { get; set; }
         public DbSet<SurveyAnswer> SurveyAnswers { get; set; }

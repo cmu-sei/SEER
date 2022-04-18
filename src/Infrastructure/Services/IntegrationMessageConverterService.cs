@@ -195,7 +195,7 @@ namespace Seer.Infrastructure.Services
                         }
                         else
                         {
-                            var ev = this._dbContext.Events.FirstOrDefault(x => string.Equals(x.Name, t, StringComparison.InvariantCultureIgnoreCase));
+                            var ev = this._dbContext.Events.FirstOrDefault(x => x.Name.ToUpper() == t.ToUpper());
                             if (ev != null)
                             {
                                 this.Detail.EventId = ev.Id;

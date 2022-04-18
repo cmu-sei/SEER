@@ -47,6 +47,8 @@ namespace Seer.Infrastructure.Models
         public string[] DefaultAdminAccounts { get; set; }
 
         public DatabaseOptions Database { get; set; }
+        
+        public PlayerOptions Player { get; set; }
 
         public string Host { get; set; }
 
@@ -55,6 +57,16 @@ namespace Seer.Infrastructure.Models
             public string Provider { get; set; }
             public string ConnectionString { get; set; }
             public string SeedFile { get; } = "seed.json";
+        }
+
+        public class PlayerOptions
+        {
+            public string BaseUrl => System.Environment.GetEnvironmentVariable("SEER_PLAYER_BASE_URL");
+            public string Username => System.Environment.GetEnvironmentVariable("SEER_PLAYER_USERNAME");
+            public string Password => System.Environment.GetEnvironmentVariable("SEER_PLAYER_PASSWORD");
+            public string ClientSecret => System.Environment.GetEnvironmentVariable("SEER_PLAYER_CLIENT_SECRET");
+            public string ClientId => System.Environment.GetEnvironmentVariable("SEER_PLAYER_CLIENT_ID");
+            public string Scope => System.Environment.GetEnvironmentVariable("SEER_PLAYER_SCOPE");
         }
     }
 }
