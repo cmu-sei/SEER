@@ -299,7 +299,7 @@ DM21-0384
                             let fName = "";
                             if (u !== null)
                                 fName = u.firstName;
-                            x.prepend(formatHistoryItem(eventId, val.historyType, val.created, fName, val.message.replace("<", "")));
+                            x.append(formatHistoryItem(eventId, val.historyType, val.created, fName, val.message.replace("<", "")));
                         }
                        })
                        $('#status').hide();
@@ -343,7 +343,7 @@ DM21-0384
             });
             
             connection.on("note", function (eventId, userId, historyType, message, created) {
-                $("#history-" + eventId).prepend(FormatHistoryItem(eventId, historyType, created, userId, message.replace("<", ""))).effect("highlight", {}, 200);
+                $("#history-" + eventId).prepend(formatHistoryItem(eventId, historyType, created, userId, message.replace("<", ""))).effect("highlight", {}, 200);
             });
             
             connection.on("marktime", function (eventId, type, complete, timeReturned) {

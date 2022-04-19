@@ -14,7 +14,9 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.SignalR;
 using NLog;
+using Seer.Hubs;
 using Seer.Infrastructure.Data;
 
 namespace Seer.Areas.Admin.Controllers
@@ -25,6 +27,7 @@ namespace Seer.Areas.Admin.Controllers
     {
         private readonly IDataProtector _protector;
         protected ApplicationDbContext _db;
+        protected IHubContext<ExecutionHub> _executionHubContext;
         internal static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         internal BaseController(ApplicationDbContext dbContext, IDataProtectionProvider protector)

@@ -17,7 +17,9 @@ using Seer.Infrastructure.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Seer.Hubs;
 using Seer.Infrastructure.Data;
 using Seer.Infrastructure.Extensions;
 using Seer.Infrastructure.Services;
@@ -30,9 +32,10 @@ namespace Seer.Areas.Admin.Controllers
     [Route("admin/[controller]")]
     public class ExsumController : BaseController
     {
-        public ExsumController(ApplicationDbContext dbContext, IDataProtectionProvider protector) : base(dbContext, protector)
+        public ExsumController(ApplicationDbContext dbContext, IHubContext<ExecutionHub> executionHubContext, IDataProtectionProvider protector) : base(dbContext, protector)
         {
             this._db = dbContext;
+            this._executionHubContext = executionHubContext;
         }
 
         [HttpGet("coverpage")]
@@ -296,7 +299,7 @@ namespace Seer.Areas.Admin.Controllers
                 {
                     try
                     {
-                        var resource = new IntegrationMessageConverterService(history.IntegrationObject, _db);
+                        var resource = new IntegrationMessageConverterService(history.IntegrationObject, _db, _executionHubContext);
 
                         var created = Convert.ToDouble(resource.HiveObject.StartDate).FromJavaTimeStampToDateTime();
                         var duration = created.ToLocalTime() - executionTime.Value.ToLocalTime();

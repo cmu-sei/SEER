@@ -93,13 +93,13 @@ namespace Seer.Infrastructure.Services
         }
 
         public static async Task Process(ApplicationDbContext dbContext,
-            IHubContext<ExecutionHub> hubContext,
+            IHubContext<ExecutionHub> executionHubContext,
             object payload)
         {
             log.Debug(payload);
             try
             {
-                var o = new IntegrationMessageConverterService(payload.ToString(), dbContext);
+                var o = new IntegrationMessageConverterService(payload.ToString(), dbContext, executionHubContext);
 
                 if (o.Detail.AssessmentId < 0 || o.Detail.EventId < 0)
                 {
@@ -122,7 +122,7 @@ namespace Seer.Infrastructure.Services
                 await dbContext.SaveChangesAsync();
 
                 //int eventId, string userId, string historyType, string message, string created)
-                await hubContext.Clients.All.SendAsync("note",
+                await executionHubContext.Clients.All.SendAsync("note",
                     o.Detail.EventId,
                     user.UserName,
                     o.Detail.HistoryType,
@@ -136,14 +136,14 @@ namespace Seer.Infrastructure.Services
             }
         }
 
-        public static async Task<string> Fix(ApplicationDbContext dbContext)
+        public static async Task<string> Fix(ApplicationDbContext dbContext, IHubContext<ExecutionHub> executionHubContext)
         {
             var response = new StringBuilder();
             foreach (var history in await dbContext.EventDetailHistory.ToListAsync())
             {
                 try
                 {
-                    var x = new IntegrationMessageConverterService(history.IntegrationObject, dbContext);
+                    var x = new IntegrationMessageConverterService(history.IntegrationObject, dbContext, executionHubContext);
                     history.Message = x.Detail.Message;
 
                     var o = JsonConvert.DeserializeObject<HiveObject>(history.IntegrationObject);
@@ -179,6 +179,21 @@ namespace Seer.Infrastructure.Services
             await dbContext.SaveChangesAsync();
 
             return response.ToString();
+        }
+
+        public static AssessmentEvent FindId(ApplicationDbContext dbContext, HiveObject hiveObject)
+        {
+            var assessmentEvent = new AssessmentEvent();
+            var o = dbContext.EventDetailHistory
+                .FirstOrDefault(x=>x.IntegrationId.Equals(hiveObject.Id));
+
+            if (o != null)
+            {
+                assessmentEvent.AssessmentId = o.AssessmentId;
+                assessmentEvent.EventId = o.EventId;
+            }
+
+            return assessmentEvent;
         }
     }
 }

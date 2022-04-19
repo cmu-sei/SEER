@@ -193,7 +193,7 @@ DM21-0384
                             if (u !== null) {
                                 fName = u.firstName;
                             }
-                            x.prepend(formatHistoryItem(eventId, val.historyType, val.created, fName, val.message.replace("<", "")));
+                            x.append(formatHistoryItem(eventId, val.historyType, val.created, fName, val.message.replace("<", "")));
                         }
                     })
                     if (typeof eventId !== "undefined") {

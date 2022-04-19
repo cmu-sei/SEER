@@ -23,11 +23,9 @@ namespace Seer.Controllers.API
     [Route("/api/[controller]/")]
     public class HiveController : BaseController
     {
-        private IHubContext<ExecutionHub> _hubContext;
-
-        public HiveController(ApplicationDbContext dbContext, IHubContext<ExecutionHub> hubcontext)
+        public HiveController(ApplicationDbContext dbContext, IHubContext<ExecutionHub> executionHubContext)
         {
-            this._hubContext = hubcontext;
+            this._executionHubContext = executionHubContext;
             this._db = dbContext;
         }
 
@@ -36,7 +34,7 @@ namespace Seer.Controllers.API
         public async Task<IActionResult> Webhook(object payload)
         {
             //var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
-            await IntegrationMessageService.Process(this._db, this._hubContext, payload);
+            await IntegrationMessageService.Process(this._db, this._executionHubContext, payload);
             return Ok("OK");
         }
     }

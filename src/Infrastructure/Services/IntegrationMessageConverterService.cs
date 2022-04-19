@@ -11,10 +11,13 @@ DM21-0384
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using Seer.Hubs;
 using Seer.Infrastructure.Data;
 using Seer.Infrastructure.Extensions;
 using Seer.Infrastructure.Models;
@@ -23,13 +26,15 @@ namespace Seer.Infrastructure.Services
     public class IntegrationMessageConverterService
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly IHubContext<ExecutionHub> _executionHubContext;
         
         public readonly HiveObject HiveObject;
         public IEnumerable<KeyValuePair<string, string>> Updates { get; private set; }
         public EventDetailHistory Detail { get; set; } = new();
 
-        public IntegrationMessageConverterService(string payload, ApplicationDbContext dbContext)
+        public IntegrationMessageConverterService(string payload, ApplicationDbContext dbContext, IHubContext<ExecutionHub> executionHubContext)
         {
+            
             try
             {
                 this.HiveObject = JsonConvert.DeserializeObject<HiveObject>(payload);
@@ -42,6 +47,7 @@ namespace Seer.Infrastructure.Services
             }
             
             this._dbContext = dbContext;
+            this._executionHubContext = executionHubContext;
 
             this.Detail.User = new User();
             this.Detail.AssessmentId = -1;
@@ -71,20 +77,31 @@ namespace Seer.Infrastructure.Services
                 case "CASE TEMPLATE":
                     this.Detail.Message = $"{this.Detail.HistoryType} {this.Detail.HistoryAction}".TitleCase();
                     break;
+                case "CASE TASK":
+                case "CASE TASK LOG":
+                    var detail = "";
+                    var title = this.HiveObject.BaseObject.Title;
+                    var (_, assignee) = this.HiveObject.Details.FirstOrDefault(x => x.Key is "assignee" or "owner");
+                    if (assignee != null && this.Detail.HistoryType == "CASE TASK")
+                    {
+                        // assigned task 2 to tdbrooks@cert.org
+                        this.Detail.Message = $"assigned {title} to {assignee}";
+                        break;
+                    }
+                    var (_, message) = this.HiveObject.Details.FirstOrDefault(x => x.Key == "message");
+                    
+                    this.Detail.Message = $"{ReplaceUgly(message.ToString())}".TitleCase();
+                    break;
                 case "TASK":
                 case "CASE":
-                case "CASE TASK LOG":
-                case "CASE TASK":
                 case "CASE ARTIFACT":
                     this.Detail.Message = $"{this.Detail.IntegrationId} {this.Detail.HistoryType} {this.Detail.HistoryAction}".TitleCase();
                     if (this.Detail.HistoryAction == "UPDATE")
                     {
-                        var details = this.Updates
-                            .Select(update => $"{update.Key} to {update.Value}").ToList();
+                        var details = this.Updates.Select(update => $"{update.Key} to {update.Value}").ToList();
                         var o = $": {string.Join(",", details)}";
                         o = ReplaceUgly(o);
                         this.Detail.Message += o;
-
                     }
                     break;
             }
@@ -168,42 +185,57 @@ namespace Seer.Infrastructure.Services
 
         private void SetAssessmentAndEvent()
         {
-            if (this.HiveObject.BaseObject.Tags == null) return;
-
-            foreach (var tag in this.HiveObject.BaseObject.Tags)
+            // find this event by the integration id
+            var assessmentEvent = IntegrationMessageService.FindId(this._dbContext, this.HiveObject);
+            if (assessmentEvent.AssessmentId > 0)
             {
-                if (tag == null) continue;
-                foreach (var splitChar in SplitChars)
+                this.Detail.AssessmentId = assessmentEvent.AssessmentId;
+                this.Detail.EventId = assessmentEvent.EventId;
+            }
+            else
+            {
+                // or by tags
+                if (this.HiveObject.BaseObject.Tags != null)
                 {
-                    var tagString = tag.ToString();
-                    if (string.IsNullOrEmpty(tagString) || !tagString.Contains(splitChar)) continue;
-
-                    var tagArray = tagString.Split(Convert.ToChar(splitChar));
-                    if (tagArray[0].ToUpper().StartsWith("ASSESSMENT"))
+                    foreach (var tag in this.HiveObject.BaseObject.Tags)
                     {
-                        this.Detail.AssessmentId = Convert.ToInt32(tagArray[1].Replace("\"", ""));
-                    }
-
-                    if (tagArray[0].ToUpper().StartsWith("EVENT"))
-                    {
-                        var t = tagArray[1].Replace("\"", "");
-
-                        // is it an id or is it the name?
-                        if (int.TryParse(t, out var i))
+                        if (tag == null) continue;
+                        foreach (var splitChar in SplitChars)
                         {
-                            this.Detail.EventId = Convert.ToInt32(i);
-                        }
-                        else
-                        {
-                            var ev = this._dbContext.Events.FirstOrDefault(x => x.Name.ToUpper() == t.ToUpper());
-                            if (ev != null)
+                            var tagString = tag.ToString();
+                            if (string.IsNullOrEmpty(tagString) || !tagString.Contains(splitChar)) continue;
+
+                            var tagArray = tagString.Split(Convert.ToChar(splitChar));
+                            if (tagArray[0].ToUpper().StartsWith("ASSESSMENT"))
                             {
-                                this.Detail.EventId = ev.Id;
+                                this.Detail.AssessmentId = Convert.ToInt32(tagArray[1].Replace("\"", ""));
+                            }
+
+                            if (tagArray[0].ToUpper().StartsWith("EVENT"))
+                            {
+                                var t = tagArray[1].Replace("\"", "");
+
+                                // is it an id or is it the name?
+                                if (int.TryParse(t, out var i))
+                                {
+                                    this.Detail.EventId = Convert.ToInt32(i);
+                                }
+                                else
+                                {
+                                    var ev = this._dbContext.Events.FirstOrDefault(x => x.Name.ToUpper() == t.ToUpper());
+                                    if (ev != null)
+                                    {
+                                        this.Detail.EventId = ev.Id;
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+
+            // match any that we missed
+            IntegrationMessageService.TryMatchUnmatched(this._dbContext).GetAwaiter().GetResult();
         }
     }
 }

@@ -12,6 +12,8 @@ using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Seer.Hubs;
 using Seer.Infrastructure.Data;
 
 namespace Seer.Controllers.API
@@ -22,7 +24,8 @@ namespace Seer.Controllers.API
     public class BaseController : Controller
     {
         protected ApplicationDbContext _db;
-
+        protected IHubContext<ExecutionHub> _executionHubContext;
+        
         internal string UserId => this.User.FindFirstValue("sub");
     }
 }

@@ -12,6 +12,8 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Seer.Hubs;
 using Seer.Infrastructure.Data;
 using Seer.Infrastructure.Services;
 using Seer.Infrastructure.ViewModels;
@@ -21,9 +23,10 @@ namespace Seer.Controllers.API
     [Route("/api/[controller]/")]
     public class EventHistoryController : BaseController
     {
-        public EventHistoryController(ApplicationDbContext dbContext)
+        public EventHistoryController(ApplicationDbContext dbContext, IHubContext<ExecutionHub> executionHubContext)
         {
             this._db = dbContext;
+            this._executionHubContext = executionHubContext;
         }
 
         [HttpPost("status")]
@@ -50,7 +53,7 @@ namespace Seer.Controllers.API
         [HttpGet("fix")]
         public async Task<IActionResult> Fix()
         {
-            return Ok(await IntegrationMessageService.Fix(this._db));
+            return Ok(await IntegrationMessageService.Fix(this._db, this._executionHubContext));
         }
     }
 }

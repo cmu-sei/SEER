@@ -21,11 +21,11 @@ namespace Seer.Hubs
     public class METHub : HubBase
     {
         private static readonly ConnectionMapping<string> _connections = new();
-        private IHubContext<ExecutionHub> _hubContext;
+        private IHubContext<ExecutionHub> _executionHubContext;
 
-        public METHub(ApplicationDbContext context, IHubContext<ExecutionHub> hubcontext) : base(context)
+        public METHub(ApplicationDbContext context, IHubContext<ExecutionHub> executionHubContext) : base(context)
         {
-            this._hubContext = hubcontext;
+            this._executionHubContext = executionHubContext;
         }
 
         public async Task AnswerChanged(int sctid, string comment, string status)
@@ -61,7 +61,7 @@ namespace Seer.Hubs
                 this._context.EventDetailHistory.Update(historyItem);
 
                 //int eventId, string userId, string historyType, string message, string created)
-                await this._hubContext.Clients.All.SendAsync("note",
+                await this._executionHubContext.Clients.All.SendAsync("note",
                     historyItem.EventId,
                     user.FirstName,
                     historyItem.HistoryType,

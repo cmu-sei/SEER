@@ -27,11 +27,9 @@ namespace Seer.Controllers.API
     [Route("api/seer/")]
     public class SeerController : BaseController
     {
-        private IHubContext<ExecutionHub> _hubContext;
-
-        public SeerController(ApplicationDbContext dbContext, IHubContext<ExecutionHub> hubcontext)
+        public SeerController(ApplicationDbContext dbContext, IHubContext<ExecutionHub> executionHubContext)
         {
-            this._hubContext = hubcontext;
+            this._executionHubContext = executionHubContext;
             this._db = dbContext;
         }
 
@@ -133,7 +131,7 @@ namespace Seer.Controllers.API
             var o = this._db.EventDetailHistory.Include(x => x.User).Where(x => x.AssessmentId == assessmentId);
             if (!string.IsNullOrEmpty(filter))
                 o = o.Where(x => x.HistoryType == filter);
-            return Ok(o.ToList());
+            return Ok(o.OrderByDescending(x=>x.Id).ToList());
         }
 
         [HttpPost("assessments/{assessmentId}/events/{eventId}/delete")]
@@ -193,7 +191,7 @@ namespace Seer.Controllers.API
             await this._db.SaveChangesAsync();
 
             //int eventId, string userId, string historyType, string message, string created)
-            await this._hubContext.Clients.All.SendAsync("note",
+            await this._executionHubContext.Clients.All.SendAsync("note",
                 historyItem.EventId,
                 user.FirstName,
                 historyItem.HistoryType,
@@ -239,7 +237,7 @@ namespace Seer.Controllers.API
             await this._db.SaveChangesAsync();
 
             //int eventId, string userId, string historyType, string message, string created)
-            await this._hubContext.Clients.All.SendAsync("note",
+            await this._executionHubContext.Clients.All.SendAsync("note",
                 historyItem.EventId,
                 user.FirstName,
                 historyItem.HistoryType,
