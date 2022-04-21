@@ -11,7 +11,6 @@ DM21-0384
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -90,7 +89,7 @@ namespace Seer.Infrastructure.Services
                     }
                     var (_, message) = this.HiveObject.Details.FirstOrDefault(x => x.Key == "message");
                     
-                    this.Detail.Message = $"{ReplaceUgly(message.ToString())}".TitleCase();
+                    this.Detail.Message = $"{title}: {ReplaceUgly(message.ToString())}".TitleCase();
                     break;
                 case "TASK":
                 case "CASE":
