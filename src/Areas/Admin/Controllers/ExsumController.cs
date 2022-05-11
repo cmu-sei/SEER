@@ -202,6 +202,9 @@ namespace Seer.Areas.Admin.Controllers
         [HttpGet("score")]
         public async Task<IActionResult> Score()
         {
+            if (this.AssessmentId == null || this.GroupId == null)
+                return null;
+            
             var s = new AssessmentScoringService(this._db);
             var score = await s.ScoreTeam(
                 new TeamScoringRequest
@@ -299,7 +302,7 @@ namespace Seer.Areas.Admin.Controllers
                 {
                     try
                     {
-                        var resource = new IntegrationMessageConverterService(history.IntegrationObject, _db, _executionHubContext);
+                        var resource = new IntegrationMessageConverterService(history.IntegrationObject, _db);
 
                         var created = Convert.ToDouble(resource.HiveObject.StartDate).FromJavaTimeStampToDateTime();
                         var duration = created.ToLocalTime() - executionTime.Value.ToLocalTime();

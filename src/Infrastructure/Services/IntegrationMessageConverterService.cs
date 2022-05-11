@@ -14,40 +14,37 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
-using Seer.Hubs;
 using Seer.Infrastructure.Data;
 using Seer.Infrastructure.Extensions;
 using Seer.Infrastructure.Models;
+
 namespace Seer.Infrastructure.Services
 {
     public class IntegrationMessageConverterService
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly IHubContext<ExecutionHub> _executionHubContext;
         
         public readonly HiveObject HiveObject;
         public IEnumerable<KeyValuePair<string, string>> Updates { get; private set; }
         public EventDetailHistory Detail { get; set; } = new();
 
-        public IntegrationMessageConverterService(string payload, ApplicationDbContext dbContext, IHubContext<ExecutionHub> executionHubContext)
+        public IntegrationMessageConverterService(string payload, ApplicationDbContext dbContext)
         {
-            
             try
             {
                 this.HiveObject = JsonConvert.DeserializeObject<HiveObject>(payload);
+                if (this.HiveObject == null)
+                    throw new Exception();
             }
             catch(Exception e)
             {
                 // TODO: need to put failed requests somewhere
-                
                 throw new Exceptions.HiveFormattingException($"Cannot Deserialize HiveObject. Payload is not formatted as expected: [{payload}] {e}");
             }
             
             this._dbContext = dbContext;
-            this._executionHubContext = executionHubContext;
-
+        
             this.Detail.User = new User();
             this.Detail.AssessmentId = -1;
             this.Detail.EventId = -1;
@@ -60,10 +57,10 @@ namespace Seer.Infrastructure.Services
             this.Detail.IntegrationObject = JsonConvert.SerializeObject(this.HiveObject).StripXss();
             this.Detail.IntegrationRequestId = this.HiveObject.RequestId;
 
+            this.SetTags();
             this.SetAssessmentAndEvent();
             this.SetUpdates();
             this.SetMessage();
-            this.SetTags();
         }
 
         private void SetMessage()
@@ -78,7 +75,6 @@ namespace Seer.Infrastructure.Services
                     break;
                 case "CASE TASK":
                 case "CASE TASK LOG":
-                    var detail = "";
                     var title = this.HiveObject.BaseObject.Title;
                     var (_, assignee) = this.HiveObject.Details.FirstOrDefault(x => x.Key is "assignee" or "owner");
                     if (assignee != null && this.Detail.HistoryType == "CASE TASK")
@@ -108,11 +104,9 @@ namespace Seer.Infrastructure.Services
             this.Detail.Message = this.Detail.Message.Clean();
         }
 
-        private string ReplaceUgly(string o)
+        private static string ReplaceUgly(string o)
         {
-            if (string.IsNullOrEmpty(o)) return o;
-            //o = o.SplitCamelCase();
-            return o.CapitalizeFirst();
+            return string.IsNullOrEmpty(o) ? o : o.CapitalizeFirst();
         }
 
         private void SetUpdates()
@@ -149,7 +143,7 @@ namespace Seer.Infrastructure.Services
                 }
                 else
                 {
-                    updates.Add(new KeyValuePair<string, string>(key, value?.ToString()));
+                    updates.Add(new KeyValuePair<string, string>(key, value.ToString()));
                 }
 
             }
@@ -180,7 +174,7 @@ namespace Seer.Infrastructure.Services
             this.Detail.SetTags(string.Join(",", tags));
         }
 
-        private readonly string[] SplitChars = { ":", ",", "=" };
+        private readonly string[] SplitChars = { ":", "=" };
 
         private void SetAssessmentAndEvent()
         {
@@ -193,29 +187,32 @@ namespace Seer.Infrastructure.Services
             }
             else
             {
-                // or by tags
-                if (this.HiveObject.BaseObject.Tags != null)
+                var assessment = string.Empty;
+                var team = string.Empty;
+                var inject = string.Empty;
+                
+                // or by tags that are k:v format
+                foreach (var t in this.Detail.Tags.Split(','))
                 {
-                    foreach (var tag in this.HiveObject.BaseObject.Tags)
+                    var tag = t.Trim();
+                    foreach (var splitChar in SplitChars)
                     {
-                        if (tag == null) continue;
-                        foreach (var splitChar in SplitChars)
-                        {
-                            var tagString = tag.ToString();
-                            if (string.IsNullOrEmpty(tagString) || !tagString.Contains(splitChar)) continue;
+                        if (!tag.Contains(splitChar)) continue;
 
-                            var tagArray = tagString.Split(Convert.ToChar(splitChar));
-                            if (tagArray[0].ToUpper().StartsWith("ASSESSMENT"))
+                        var tagArray = tag.Split(Convert.ToChar(splitChar));
+                        
+                        var key = tagArray[0].Trim().ToUpper();
+                        var val = tagArray[1].Replace("\"", "");
+                        switch (key)
+                        {
+                            case "ASSESSMENTID":
                             {
                                 this.Detail.AssessmentId = Convert.ToInt32(tagArray[1].Replace("\"", ""));
+                                break;
                             }
-
-                            if (tagArray[0].ToUpper().StartsWith("EVENT"))
+                            case "EVENTID":
                             {
-                                var t = tagArray[1].Replace("\"", "");
-
-                                // is it an id or is it the name?
-                                if (int.TryParse(t, out var i))
+                                if (int.TryParse(val, out var i))
                                 {
                                     this.Detail.EventId = Convert.ToInt32(i);
                                 }
@@ -227,11 +224,35 @@ namespace Seer.Infrastructure.Services
                                         this.Detail.EventId = ev.Id;
                                     }
                                 }
+                                break;
                             }
+                            case "ASSESSMENT"://MC3?
+                                assessment = val;
+                                break;
+                            case "TEAM"://GOLD
+                                team = val;
+                                break;
+                            case "INJECT"://GCD-2022-38
+                                inject = val;
+                                break;
                         }
                     }
                 }
+                
+                if( this.Detail.EventId < 1 || this.Detail.AssessmentId < 1)
+                {
+                    //don't have all the ids, so find by the assessment, team, and inject name
+                    var dbTeam = this._dbContext.Groups.FirstOrDefault(x => x.Name == team); 
+                    var dbAssessment = this._dbContext.Assessments.FirstOrDefault(x => x.Name == assessment && x.GroupId == dbTeam.Id);
+                    var dbEvent =  this._dbContext.Events.FirstOrDefault(x => x.Name.ToUpper() == inject.ToUpper() && x.AssessmentId == dbAssessment.Id);
+                    if (dbEvent != null)
+                    {
+                        this.Detail.AssessmentId = dbEvent.AssessmentId;
+                        this.Detail.EventId = dbEvent.Id;
+                    }
+                }
             }
+
 
             // match any that we missed
             IntegrationMessageService.TryMatchUnmatched(this._dbContext).GetAwaiter().GetResult();

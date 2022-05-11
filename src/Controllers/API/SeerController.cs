@@ -15,6 +15,7 @@ using System.Net;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Seer.Hubs;
 using Seer.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ using Seer.Infrastructure.Data;
 namespace Seer.Controllers.API
 {
     [Route("api/seer/")]
-    public class SeerController : BaseController
+    public class SeerController : EOBaseController
     {
         public SeerController(ApplicationDbContext dbContext, IHubContext<ExecutionHub> executionHubContext)
         {

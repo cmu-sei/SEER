@@ -28,4 +28,15 @@ namespace Seer.Controllers.API
         
         internal string UserId => this.User.FindFirstValue("sub");
     }
+    
+    [Authorize(Roles = "EO, Admin")]
+    [ApiController]
+    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+    public class EOBaseController : Controller
+    {
+        protected ApplicationDbContext _db;
+        protected IHubContext<ExecutionHub> _executionHubContext;
+        
+        internal string UserId => this.User.FindFirstValue("sub");
+    }
 }

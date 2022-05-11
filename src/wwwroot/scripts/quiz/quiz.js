@@ -22,14 +22,14 @@
 
     $(".option").on("change", null, function () {
         var o = Split(this.id);
-
+        console.log(this.id);
         if (this != null && this.type === "text") {
             //control is textbox
-            console.log("Called hub:", uid, null, quizId, o[1], null, $(this).val());
-            hub.invoke("AnswerChanged", uid, null, quizId, o[1], 0, $(this).val()).catch(err => console.error(err.toString()));
+            console.log("Called hub text:", uid, null, quizId, o[1], null, $(this).val());
+            hub.invoke("AnswerChanged", uid, null, quizId, o[1], "0", $(this).val()).catch(err => console.error(err.toString()));
         }
         else {
-            console.log("Called hub 2:", uid, null, quizId, o[1], o[2], null);
+            console.log("Called hub multiple-choice:", uid, null, quizId, o[1], o[2], null);
             hub.invoke("AnswerChanged", uid, null, quizId, o[1], o[2], null).catch(err => console.error(err.toString()));
         }
     });
