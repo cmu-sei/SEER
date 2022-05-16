@@ -92,8 +92,6 @@ namespace Seer.Infrastructure.Services
                         }
                     }
                 }
-
-                //await new SquireService(db).Run(user);
             }
 
             if (user == null)
@@ -119,7 +117,7 @@ namespace Seer.Infrastructure.Services
                 ctx.Principal?.AddIdentity(appIdentity);
             }
 
-            if (Program.Configuration.SquireEnabled)
+            if (_conf.Squire.Enabled)
             {
                 await new SquireService(db).Run(user);
             }

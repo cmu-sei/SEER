@@ -22,7 +22,7 @@ using Seer.Infrastructure.Enums;
 
 namespace Seer.Controllers
 {
-    [Authorize]
+    
     public class HomeController : BaseController
     {
         public HomeController(ApplicationDbContext dbContext, IDataProtectionProvider protector) : base(dbContext, protector) { }
@@ -30,7 +30,10 @@ namespace Seer.Controllers
         [HttpGet]
         public ActionResult Index()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated) return RedirectToAction("Login", "Account");
+            if (User.Identity is not { IsAuthenticated: true })
+            {
+                return RedirectToAction("Index", "Time");
+            }
 
             var model = new HomeViewModel();
 
@@ -71,6 +74,7 @@ namespace Seer.Controllers
             //not logged in? go do that
         }
 
+        [Authorize]
         [HttpGet("assessment")]
         public IActionResult Assessment()
         {
@@ -86,6 +90,7 @@ namespace Seer.Controllers
             return View(model);
         }
 
+        [Authorize]
         [HttpGet("setassessment")]
         public ActionResult SetAssessment(int id)
         {

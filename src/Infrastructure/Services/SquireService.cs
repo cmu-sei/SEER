@@ -51,7 +51,7 @@ public class SquireService
             await PlayerCreateAccount(user);
             await PlayerAddUserToTeam(squiredAccount, squireIntegration);
 
-            //add to mattermost
+            //add to mattermost/rocketchat/chat framework we decide to use
 
             //update SquiredAccount record with OAuthID to indicate it is complete
             squiredAccount.OAuthId = user.OAuthId;
@@ -162,7 +162,8 @@ public class SquireService
         foreach (var possibleName in possibleNames)
         {
             var x = await this._db.SquiredAccounts.FirstOrDefaultAsync(x => x.MatchName.ToLower().Contains(possibleName.ToLower()));
-            if (x != null) return x;
+            if (x != null) 
+                return x;
         }
         return null;
     }

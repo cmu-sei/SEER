@@ -48,10 +48,15 @@ namespace Seer.Infrastructure.Models
 
         public DatabaseOptions Database { get; set; }
         
-        public bool SquireEnabled { get; set; }
+        public SquireOptions Squire { get; set; }
         public PlayerOptions Player { get; set; }
 
         public string Host { get; set; }
+
+        public class SquireOptions
+        {
+            public bool Enabled { get; set; }
+        }
 
         public class DatabaseOptions
         {

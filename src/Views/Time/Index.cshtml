@@ -13,17 +13,19 @@
 @using Seer.Infrastructure.Models
 @model Seer.Infrastructure.Models.AssessmentTime
 
-
-<h2>Elapsed Event Time for @ViewBag.AssessmentName</h2>
+@if (Model != null)
+{
+<h2>Elapsed Event Time for @ViewBag.GroupName @ViewBag.AssessmentName</h2>
 <hr />
 <br />
+}
 
 @{
     ViewBag.Title = "Timer";
 
     if (Model == null)
     {
-        <div>Sorry, but the timer has not been configured for this event</div>
+        <div>Sorry, but no configured assessment event could be found</div>
         return;
     }
 

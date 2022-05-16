@@ -135,9 +135,6 @@ namespace Seer
                 })
                 .AddOpenIdConnect("oidc", options =>
                 {
-                    // from Jeff
-                    // All the pcke stuff should be handled for you, so just a matter of specifying it.
-                    // (I guess the caveat is that the Identity Provider supports pcke, which most do, including ours.)
                     options.RequireHttpsMetadata = !_isDevelopment && options.RequireHttpsMetadata;
                     options.UsePkce = true;
 
@@ -232,7 +229,7 @@ namespace Seer
             app.UseForwardedHeaders();
             app.UseAuthentication();
             app.UseCors("default");
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
             
             if(env.IsDevelopment())
             {

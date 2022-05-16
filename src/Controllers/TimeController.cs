@@ -8,16 +8,18 @@ Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Off
 DM21-0384 
 */
 
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Seer.Infrastructure.Data;
+using Seer.Infrastructure.Models;
 using Seer.Infrastructure.Services;
 
 namespace Seer.Controllers
 {
-    [Authorize]
+    [AllowAnonymous]
     [Route("[controller]")]
     public class TimeController : BaseController
     {
@@ -26,11 +28,48 @@ namespace Seer.Controllers
         [HttpGet]
         public async Task<ActionResult> Index()
         {
-            if (!this.AssessmentId.HasValue)
-                return RedirectToAction("Assessment", "Home");
+            int assessmentId;
+            if (User.Identity is { IsAuthenticated: true })
+            {
+                if (!this.AssessmentId.HasValue)
+                    return RedirectToAction("Assessment", "Home");
+
+                assessmentId = this.AssessmentId.Value;
+            }
+            else
+            {
+                //have to figure out the currently active assessment
+                var activeAssessmentTimeRecords = this._db.AssessmentTime.FirstOrDefault(x => x.Status == AssessmentTime.ExerciseTimeStatus.Active);
+                if (activeAssessmentTimeRecords == null)
+                {
+                    ViewBag.Message = "No active assessment";
+                    return View();
+                }
+                
+                var activeAssessment = this._db.Assessments.FirstOrDefault(x => x.Id == activeAssessmentTimeRecords.AssessmentId);
+                var group = this._db.Groups.FirstOrDefault(x => x.Id == activeAssessment.GroupId);
+                
+                if(activeAssessment == null || group == null)
+                {
+                    ViewBag.Message = "No active assessment";
+                    return View();
+                }
+                
+                assessmentId = activeAssessment.Id;
+                
+                ViewBag.AssessmentId = activeAssessment.Id;
+                ViewBag.AssessmentName = activeAssessment.Name;
+                ViewBag.GroupId = group.Id;
+                ViewBag.GroupName = group.Name;
+                
+                this.AssessmentId = activeAssessment.Id;
+                this.AssessmentName = activeAssessment.Name;
+                this.GroupId = group.Id;
+                this.GroupName = group.Name;
+            }
 
             var assessmentTimeService = new AssessmentTimeService(this._db);
-            await assessmentTimeService.Get(this.AssessmentId.Value);
+            await assessmentTimeService.Get(assessmentId);
             var t = assessmentTimeService.Time;
 
             return View(t);
