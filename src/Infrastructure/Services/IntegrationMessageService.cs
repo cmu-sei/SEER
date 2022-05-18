@@ -185,7 +185,7 @@ namespace Seer.Infrastructure.Services
         {
             var assessmentEvent = new AssessmentEvent();
             var o = dbContext.EventDetailHistory
-                .FirstOrDefault(x=>x.IntegrationId.Equals(hiveObject.Id));
+                .FirstOrDefault(x=>x.IntegrationId == hiveObject.Id);
 
             if (o != null)
             {
