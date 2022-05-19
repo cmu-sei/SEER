@@ -33,6 +33,13 @@ namespace Seer.Infrastructure.Services
         {
             var model = await dbContext.EventDetailHistory
                 .FirstOrDefaultAsync(o => o.Id == statusUpdate.Id, ct);
+
+            if (model == null)
+            {
+                log.Warn($"EventHistoryStatusUpdate {statusUpdate.Id} not found");
+                return false;
+            }
+            
             model.Status = statusUpdate.Status;
             dbContext.Update(model);
             await dbContext.SaveChangesAsync(ct);
@@ -44,6 +51,12 @@ namespace Seer.Infrastructure.Services
             var model = await dbContext.EventDetailHistory
                 .FirstOrDefaultAsync(o => o.Id == association.Id, ct);
 
+            if (model == null)
+            {
+                log.Warn($"EventHistoryAssociation {association.Id} not found");
+                return -1;
+            }
+            
             model.AssessmentId = association.AssessmentId;
             model.EventId = association.EventId;
             if(association.EventDetailId > 0)
