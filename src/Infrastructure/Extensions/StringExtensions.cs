@@ -16,6 +16,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.AspNetCore.Http;
+using NLog.Fluent;
 
 namespace Seer.Infrastructure.Extensions
 {
@@ -80,6 +81,9 @@ namespace Seer.Infrastructure.Extensions
 
             return o;
         }
+        
+        public static string TruncateLongString(this string str, int maxLength) =>
+            str?[0..Math.Min(str.Length, maxLength)];
 
         public static string Clean(this string o)
         {
@@ -90,9 +94,8 @@ namespace Seer.Infrastructure.Extensions
             return o
                 .Replace("**", "").Replace(" to ,", ", ")
                 .Replace(",", ", ").Replace(",  ", ", ")
-                .Replace(",", " ");
-            // .Replace("\"", "")
-            // .Replace("\n", " ");
+                .Replace(",", " ").TruncateLongString(2500);
+            //2704 is max for postgres
         }
 
         public static string StripXss(this string o)
@@ -140,7 +143,17 @@ namespace Seer.Infrastructure.Extensions
 
         public static string MakeEmailAddress(this string o)
         {
-            return o.Contains("@") ? o.ToLower() : $"{o}@site.local".ToLower();
+            try
+            {
+                if (string.IsNullOrEmpty(o))
+                    return $"{Guid.NewGuid().ToString()}@site.local";
+                return o.Contains('@') ? o.ToLower() : $"{o}@site.local".ToLower();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error in making email address");
+                return $"{Guid.NewGuid().ToString()}@site.local";
+            }
         }
         
         public static IEnumerable<int> ToIntList(this string str) {

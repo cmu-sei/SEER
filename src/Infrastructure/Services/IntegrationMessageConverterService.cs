@@ -84,7 +84,7 @@ namespace Seer.Infrastructure.Services
                         break;
                     }
                     var (_, message) = this.HiveObject.Details.FirstOrDefault(x => x.Key == "message");
-                    
+                    message ??= "";
                     this.Detail.Message = $"{title}: {ReplaceUgly(message.ToString())}".TitleCase();
                     break;
                 case "TASK":
@@ -239,16 +239,22 @@ namespace Seer.Infrastructure.Services
                     }
                 }
                 
-                if( this.Detail.EventId < 1 || this.Detail.AssessmentId < 1)
+                if((this.Detail.EventId < 1 || this.Detail.AssessmentId < 1) &&(!string.IsNullOrEmpty(team) && !string.IsNullOrEmpty(assessment)))
                 {
                     //don't have all the ids, so find by the assessment, team, and inject name
-                    var dbTeam = this._dbContext.Groups.FirstOrDefault(x => x.Name == team); 
-                    var dbAssessment = this._dbContext.Assessments.FirstOrDefault(x => x.Name == assessment && x.GroupId == dbTeam.Id);
-                    var dbEvent =  this._dbContext.Events.FirstOrDefault(x => x.Name.ToUpper() == inject.ToUpper() && x.AssessmentId == dbAssessment.Id);
-                    if (dbEvent != null)
+                    var dbTeam = this._dbContext.Groups.FirstOrDefault(x => x.Name == team);
+                    if (dbTeam != null)
                     {
-                        this.Detail.AssessmentId = dbEvent.AssessmentId;
-                        this.Detail.EventId = dbEvent.Id;
+                        var dbAssessment = this._dbContext.Assessments.FirstOrDefault(x => x.Name == assessment && x.GroupId == dbTeam.Id);
+                        if (dbAssessment != null)
+                        {
+                            var dbEvent =  this._dbContext.Events.FirstOrDefault(x => x.Name.ToUpper() == inject.ToUpper() && x.AssessmentId == dbAssessment.Id);
+                            if (dbEvent != null)
+                            {
+                                this.Detail.AssessmentId = dbEvent.AssessmentId;
+                                this.Detail.EventId = dbEvent.Id;
+                            }
+                        }
                     }
                 }
             }

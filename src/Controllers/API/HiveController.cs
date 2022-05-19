@@ -8,6 +8,7 @@ Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Off
 DM21-0384 
 */
 
+using System;
 using System.Net;
 using System.Threading.Tasks;
 using Seer.Hubs;
@@ -33,9 +34,17 @@ namespace Seer.Controllers.API
         [ProducesResponseType(typeof(IActionResult), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Webhook(object payload)
         {
-            //var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
-            await IntegrationMessageService.Process(this._db, this._executionHubContext, payload);
-            return Ok("OK");
+            try
+            {
+                //var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress;
+                await IntegrationMessageService.Process(this._db, this._executionHubContext, payload);
+                return Ok("OK");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

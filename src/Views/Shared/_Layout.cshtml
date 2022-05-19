@@ -155,6 +155,16 @@
                 </li>
             </ul>
         }
+        else
+        {
+            <ul class="navbar-nav">
+                 <li>
+                    <a class="nav-link active" href="@Url.Action("Assessment", "Home")">
+                        Login
+                    </a>
+                </li>
+            </ul>
+        }
     </nav>
     @await RenderSectionAsync("jumbotron", false)
     <div class="container-fluid main1">
