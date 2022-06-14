@@ -19,6 +19,11 @@ DM21-0384
 
     static string Ellipsis(string text, int length)
     {
+        text = text.Replace("Department of Defense Information Network ", "");
+        text = text.Replace("Defensive Cyberspace Operations ", "");
+        text = text.Replace("Regional Cyber Center (RCC) ", "");
+        text = text.Replace("(", "").Replace(")", "");
+        
         if (text.Length <= length) return text;
         var pos = text.IndexOf(" ", length, StringComparison.Ordinal);
         return pos >= 0 ? $"{text[..pos]}..." : text;
@@ -35,6 +40,32 @@ DM21-0384
     .card {font-size: smaller;}
     .tab-content {padding: 20px;}
 </style>
+
+<script>
+function download(url){
+    document.getElementById('docButton').disabled = true;
+    document.getElementById('docSpinner').style.display='';
+    frame = document.createElement("iframe");
+    frame.onload=function(){document.getElementById('docSpinner').style.display='none';}
+    frame.src=url;
+    document.body.appendChild(frame);
+    
+    setTimeout(function() {
+        document.getElementById('docSpinner').style.display='none';
+        document.getElementById('docButton').disabled = false;
+    }, 10000);
+}
+</script>
+
+@if (ViewBag.Docs)
+{
+    <p class="pull-right">
+        <button class="btn btn-primary" type="button" id="docButton" onclick="download('docs');">
+            <span class="spinner spinner-border spinner-border-sm" id="docSpinner" role="status" aria-hidden="true" style="display:none"></span>
+            Download T&EO Reports
+        </button>
+    </p>
+}
 
 <h2>
     @ViewBag.GroupName @ViewBag.AssessmentName - @ViewBag.Title
@@ -185,7 +216,7 @@ DM21-0384
                 $('.history').each(function(i, obj) {
                     let x = $(this);
                     let eventId = x.data("id");
-                    console.log(eventId);
+                    //console.log(eventId);
                     $.each(data, function(key, val){
                         if (val.eventId === eventId){
                             let u = val.user;

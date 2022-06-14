@@ -34,7 +34,7 @@ public class MeasureController :  BaseController
     public MeasureController(ApplicationDbContext dbContext, IDataProtectionProvider protector) : base(dbContext, protector)
     {
     }
-    
+
     [HttpGet]
     public async Task<ActionResult> Index()
     {
@@ -46,39 +46,43 @@ public class MeasureController :  BaseController
         if (m == null)
         {
             //build new METL
-            var met = new MET { Name = "", Created = DateTime.UtcNow, AssessmentId = this.AssessmentId.Value };
-
-            //load file from local config
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "config", "metl.txt");
-            if (System.IO.File.Exists(path))
+            var assessmentId = this.AssessmentId;
+            if (assessmentId != null)
             {
-                var content = await System.IO.File.ReadAllTextAsync(path);
-                var lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                var met = new MET { Name = "", Created = DateTime.UtcNow, AssessmentId = assessmentId.Value };
 
-                var metItem = new METItem();
-                var metIndex = 1;
-                var sctIndex = 1;
-
-                foreach (var line in lines)
+                //load file from local config
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "config", "metl.txt");
+                if (System.IO.File.Exists(path))
                 {
-                    var processedLine = line.Trim();
+                    var content = await System.IO.File.ReadAllTextAsync(path);
+                    var lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-                    if (line.StartsWith("\t") || line.StartsWith(" "))
+                    var metItem = new METItem();
+                    var metIndex = 1;
+                    var sctIndex = 1;
+
+                    foreach (var line in lines)
                     {
-                        metItem.METSCTs.Add(new METItemSCT { Index = sctIndex, Name = processedLine, Status = ActiveStatus.Active, Title = "Step"});
-                        sctIndex++;
-                    }
-                    else
-                    {
-                        metItem = new METItem { Index = metIndex, Name = processedLine };
-                        metIndex++;
-                        sctIndex = 1;
+                        var processedLine = line.Trim();
+
+                        if (line.StartsWith("\t") || line.StartsWith(" "))
+                        {
+                            metItem.METSCTs.Add(new METItemSCT { Index = sctIndex, Name = processedLine, Status = ActiveStatus.Active, Title = "Step"});
+                            sctIndex++;
+                        }
+                        else
+                        {
+                            metItem = new METItem { Index = metIndex, Name = processedLine };
+                            metIndex++;
+                            sctIndex = 1;
+                        }
+
+                        met.METItems.Add(metItem);
                     }
 
-                    met.METItems.Add(metItem);
+                    await _db.METs.AddAsync(met);
                 }
-
-                await _db.METs.AddAsync(met);
             }
 
             await _db.SaveChangesAsync();
@@ -102,6 +106,18 @@ public class MeasureController :  BaseController
 
         ViewBag.Scores = scores;
 
+        var hasFiles = false;
+        
+        try
+        {
+            hasFiles = Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "templates") ,"*.docx", SearchOption.AllDirectories).Any();
+        }
+        catch { 
+            //dir doesn't exist
+        }
+        
+        ViewBag.Docs = hasFiles;
+        
         return View(events);
     }
 }

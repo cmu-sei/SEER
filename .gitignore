@@ -33,6 +33,11 @@ App_Data/uploads*
 ExerciseHub/App_Data/uploads/
 ExerciseHub/App_Data/imports/
 App_Data/system.log
+App_Data/output*
+App_Data/templates*
+App_Data/output
+App_Data/templates
+
 
 # Visual Studio 2015 cache/options directory
 .vs/
@@ -305,3 +310,5 @@ __pycache__/
 
 _db_data/
 _data/
+src/App_Data/output/*
+src/App_Data/templates/*
