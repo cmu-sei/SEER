@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NPOI.POIFS.Storage;
 using NPOI.XWPF.UserModel;
 using Seer.Infrastructure.Data;
 using Seer.Infrastructure.Extensions;
@@ -165,6 +166,95 @@ public class DocsController :  BaseController
             
             doc.Write(ws);
             writtenFiles.Add(output);
+        }
+
+        // *** cover sheet ***
+        var coverSheetTemplateName = "EXEVAL Memo Cover Sheet.docx";
+        var coverSheetTemplate = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "templates", coverSheetTemplateName);
+        var coverSheetVals = new List<KeyValuePair<string, string>>();
+        
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{now}}", DateTime.Now.ToString("d MMM yyyy")));
+
+        var group = this._db.Groups.FirstOrDefault(x => x.Id == this.GroupId);
+        
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{unit_name_long}}", group.Designation));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{unit_name_short}}", group.Designation[..1]));
+
+        var exerciseStart = string.Empty;
+        var exercise = _db.AssessmentTime.FirstOrDefault(x =>
+            x.AssessmentId == this.AssessmentId && x.Status == AssessmentTime.ExerciseTimeStatus.Active);
+
+        if (exercise != null && exercise.StartTime.HasValue)
+            exerciseStart = exercise.StartTime.Value.ToString("dd MMM yyyy");
+        
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{exercise_date}}", exerciseStart));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{evaluators_count}}", "Two"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{evaluators_names}}", "CPT Zachary Blue-Thompson and SFC Larance Barber-Holmes"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_event_count}}", "11"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_event_count}}", "14"));
+
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_unit_leaders_present_percent}}", "80"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_unit_total_present_percent}}", "86"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_performance_measures_achieved}}", "5"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_performance_measures_total}}", "5"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_performance_critical_measures_achieved}}", "2")); 
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_performance_critical_measures_total}}", "2"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_performance_leader_measures_achieved}}", "2"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dco_performance_leader_measures_total}}", "2"));
+
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_unit_leaders_present_percent}}", "80"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_unit_total_present_percent}}", "89"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_performance_measures_achieved}}", "6"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_performance_measures_total}}", "6"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_performance_critical_measures_achieved}}", "13")); 
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_performance_critical_measures_total}}", "13"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_performance_leader_measures_achieved}}", "13"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{dodin_performance_leader_measures_total}}", "13"));
+
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{theatre_unit_leaders_present_percent}}", "85"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{theatre_unit_total_present_percent}}", "87"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{theatre_performance_measures_achieved}}", "3"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{theatre_performance_measures_total}}", "3"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{theatre_performance_critical_measures_achieved}}", "2")); 
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{theatre_performance_critical_measures_total}}", "2"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{theatre_performance_leader_measures_achieved}}", "2"));
+        coverSheetVals.Add(new KeyValuePair<string, string>("{{theatre_performance_leader_measures_total}}", "2"));
+        
+        var output2 = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "output", $"{this.GroupName}_{this.AssessmentName}_{coverSheetTemplateName}");
+        using (var rs2 = System.IO.File.OpenRead(coverSheetTemplate))
+        {
+            using (var ws2 = System.IO.File.Create(output2))
+            {
+                var doc2 = new XWPFDocument(rs2);
+                
+                foreach(var header in doc2.HeaderList)
+                {
+                    foreach (var p in header.Paragraphs)
+                    {
+                        for (var i = 0; i < header.Text.Split("{").Length - 1; i++)
+                        {
+                            foreach (var (key, value) in coverSheetVals)
+                            {
+                                p.ReplaceText(key, value);
+                            }
+                        }
+                    }
+                }
+
+                foreach (var paragraph in doc2.Paragraphs)
+                {
+                    for(var i = 0; i < paragraph.Text.Split("{").Length-1;i++)
+                    {
+                        foreach (var (key, value) in coverSheetVals)
+                        {
+                            paragraph.ReplaceText(key, value);
+                        }
+                    }
+                }
+
+                doc2.Write(ws2);
+                writtenFiles.Add(output2);
+            }
         }
 
         var zipName = $"{this.GroupName}_{this.AssessmentName}.zip";
