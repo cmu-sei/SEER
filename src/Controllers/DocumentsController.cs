@@ -36,7 +36,7 @@ namespace Seer.Controllers
             return View(docs);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> Download(int id)
         {
             var doc = _db.Documents.FirstOrDefault(o => o.Id == id);

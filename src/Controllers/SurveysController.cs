@@ -136,7 +136,6 @@ namespace Seer.Controllers
                 Name = $"Exercise Survey for {this.GroupName} {this.AssessmentName}"
             };
 
-
             _db.Surveys.Add(model);
             _db.SaveChanges();
 
@@ -194,7 +193,7 @@ namespace Seer.Controllers
                 Type = SurveyQuestion.SurveyQuestionType.MultipleChoice,
                 SurveyId = model.Id,
                 Body =
-                    "3. INDIVIDUAL TRAINING VALUE<br/>a) On a scale of 1–5, 1 being no individual training valueand 5 being the best possible individual training value, how much individual training value did this exercise provide?"
+                    "3. INDIVIDUAL TRAINING VALUE<br/>a) On a scale of 1–5, 1 being no individual training value and 5 being the best possible individual training value, how much individual training value did this exercise provide?"
             }); _db.SurveyQuestions.Add(new SurveyQuestion
             {
                 Option1 = "1",

@@ -60,7 +60,7 @@ namespace Seer.Controllers
             return Json(items);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public ActionResult Details(int id)
         {
             var intelItem = this._db.IntelItems.FirstOrDefault(o => o.AssessmentId == this.AssessmentId.Value && o.Status == ActiveStatus.Active && o.Id == id);

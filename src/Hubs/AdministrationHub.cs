@@ -27,9 +27,6 @@ namespace Seer.Hubs
 
             foreach (var c in o)
             {
-                //var u = this._context.Users.FirstOrDefault(x => x.Id == c.UserId);
-                //c.UserName = u.FirstName;
-
                 var q = this._context.Quizzes.FirstOrDefault(x => x.Id == c.QuizId);
                 c.QuizName = q.Name;
             }

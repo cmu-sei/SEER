@@ -70,8 +70,6 @@ namespace Seer.Controllers
             }
 
             return View(model);
-
-            //not logged in? go do that
         }
 
         [Authorize]
@@ -79,7 +77,7 @@ namespace Seer.Controllers
         public IActionResult Assessment()
         {
             if (!this.AssessmentId.HasValue) return RedirectToAction("Index", "Home");
-            if (User.Identity == null || !User.Identity.IsAuthenticated) return View();
+            if (User.Identity is not { IsAuthenticated: true }) return View();
 
             var model = new OpViewModel { Quizzes = new List<Quiz>() };
             var a = this._db.Assessments.Include(o => o.Quizzes).FirstOrDefault(o => o.Id == this.AssessmentId);

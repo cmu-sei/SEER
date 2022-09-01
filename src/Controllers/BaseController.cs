@@ -25,9 +25,9 @@ namespace Seer.Controllers
     [ApiExplorerSettings(IgnoreApi = true)]
     public class BaseController : Controller
     {
-        private IDataProtector _protector;
-        protected ApplicationDbContext _db;
-        internal static Logger _log = LogManager.GetCurrentClassLogger();
+        private readonly IDataProtector _protector;
+        protected readonly ApplicationDbContext _db;
+        internal static readonly Logger _log = LogManager.GetCurrentClassLogger();
         internal Configuration _configuration;
 
         internal BaseController(ApplicationDbContext dbContext, IDataProtectionProvider protector)
