@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Seer.Hubs;
 using Seer.Infrastructure.Data;
 using Seer.Infrastructure.Extensions;
@@ -67,7 +68,7 @@ namespace Seer.Areas.Admin.Controllers
                     foreach (var a in element.Assessments)
                     {
                         if (a.Id != this.AssessmentId) continue;
-
+                        
                         var assessmentTimeService = new AssessmentTimeService(this._db);
                         await assessmentTimeService.Get(this.AssessmentId.Value);
                         var time = assessmentTimeService.Time;
@@ -100,17 +101,18 @@ namespace Seer.Areas.Admin.Controllers
                                         {
                                             foreach (var metItems in met.METItems)
                                             {
-                                                foreach (var metItemSct in metItems.METSCTs)
+                                                foreach (var metItemSct in metItems.METSCTs.Where(x => x.Id == s.Id))
                                                 {
-                                                    if (metItemSct.Id == s.Id)
-                                                    {
-                                                        s.Score = metItemSct.Score;
-                                                    }
+                                                    s.Score = metItemSct.Score;
+                                                    break;
                                                 }
                                             }
                                         }
-
-                                        d.SCTs.Add(s);
+                                        
+                                        if(s.Score != null)
+                                        {
+                                            d.SCTs.Add(s);
+                                        }
                                     }
                                 }
 

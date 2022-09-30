@@ -23,7 +23,7 @@ COPY ./license.txt /app/license.txt
 
 WORKDIR /app
 
-ENV SEER_VERSION=3.1.0.0
+ENV SEER_VERSION=3.3.0.0
 ENV ASPNETCORE_URLS=http://*:5000
 
 EXPOSE 5000

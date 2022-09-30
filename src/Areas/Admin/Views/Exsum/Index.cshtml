@@ -19,21 +19,29 @@ DM21-0384
 @{
     static string TimespanWriter(TimeSpan? span)
     {
-        return span.HasValue ? new DateTime(span.Value.Ticks).ToString("HH:mm:ss") : "";
+        try
+        {
+            return span.HasValue ? new DateTime(span.Value.Ticks).ToString("HH:mm:ss") : "";
+        }
+        catch (Exception e)
+        {
+            return "";
+        }
     }
 
     static string ParseHistory(DateTime executionTime, EventDetailHistory history)
     {
-        if (history.Message.StartsWith("Creation"))
+        if (history.Message.StartsWith("Creation") || history.HistoryType == "EO")
         {
             return string.Empty;
         }
 
         var created = DateTime.Now;
         var updatedBy = string.Empty;
+        var updatedByDutyPosition = string.Empty;
         var title = string.Empty;
         var score = string.Empty;
-
+        
         if (history.IntegrationObject != null)
         {
             var o = JsonConvert.DeserializeObject<HiveObject>(history.IntegrationObject);
@@ -49,12 +57,21 @@ DM21-0384
             {
                 return string.Empty;
             }
-            updatedBy = o.BaseObject.UpdatedBy;
-            if (string.IsNullOrEmpty(updatedBy))
+            updatedBy = history.User.Email;
+            updatedByDutyPosition = "";
+            if (history.User.DutyPosition == "THO")
             {
-                updatedBy = history.User.Email;
+                updatedByDutyPosition = "<span class=\"badge rounded-pill tho\">THO</span>";
             }
-            
+            else if (history.User.DutyPosition == "DCO")
+            {
+                updatedByDutyPosition = "<span class=\"badge rounded-pill dco\">DCO</span>";    
+            } 
+            else if (history.User.DutyPosition == "OPS")
+            {
+                updatedByDutyPosition = "<span class=\"badge rounded-pill ops\">OPS</span>";
+            }
+
             if (o.BaseObject.Title != null)
             {
                 title = o.BaseObject.Title.ToString();
@@ -74,27 +91,27 @@ DM21-0384
         
         var duration = (created.ToLocalTime() - executionTime.ToLocalTime()).ToString(@"hh\:mm");
 
-        var sb = new StringBuilder($"<tr>");
+        var sb = new StringBuilder($"<tr title='{history.Id}'>");
         sb.Append($"<td class='col-1 history_time {score}' title='history_id: {history.Id} execution_time: {created}' nowrap='nowrap'>");
             sb.Append("<img src='/content/images/").Append(history.HistoryType.ToLower()).Append(".png' class='fa fa-fixed' />&nbsp;");
             sb.Append("(+").Append(duration).Append(")");
         sb.Append("</td>");
         
-        // sb.Append("<td class='col-1' nowrap='nowrap'>");
-        // if (!updatedBy.Contains(".api") && !updatedBy.Contains("cmu-admin"))
-        // {
-        //     sb.Append("<span class='user'>").Append(updatedBy).Append(" </span>");
-        // }
-        // sb.Append("&nbsp;</td>");
+        sb.Append("<td class='col-1' nowrap='nowrap'>");
+        //if (!updatedBy.Contains(".api") && !updatedBy.Contains("cmu-admin"))
+        //{
+        sb.Append(updatedByDutyPosition).Append("<span class='user").Append("'>").Append(updatedBy).Append(" </span>");
+        //}
+        sb.Append("&nbsp;</td>");
         
         sb.Append("<td class='history_title'>");
             var message = history.Message.ToLower().Replace("<", "");
             message = message.Replace("[[", "<a class='group1 cboxElement' href='").Replace("]]", "'><img src='/content/images/resize.png' class='fa fa-fixed' /></a>");
             sb.Append(message);
-            if (!string.IsNullOrEmpty(title) && !title.StartsWith("GCD-"))
-            {
-                sb.Append(" - ").Append(title);
-            }
+            // if (!string.IsNullOrEmpty(title) && !title.StartsWith("GCD-"))
+            // {
+            //     sb.Append(" - ").Append(title);
+            // }
             sb.Append("</td>");
             sb.Append("</tr>");
         return sb.ToString();
@@ -163,6 +180,10 @@ DM21-0384
     .table-nl * {border:none !important; font-size: small}
     .user {font-style: italic; color: #2b669a}
     .fa-fixed {width: 18px; margin-top: -3px;}
+    .rounded-pill { font-size:9px; font-weight: normal; margin-right: 3px; }
+    .tho {background-color: darkgreen}
+    .dco {background-color: orangered}
+    .ops {background-color: darkblue}
 </style>
 
 <div class="container-fluid">
@@ -303,89 +324,89 @@ DM21-0384
                     </tbody>
                 </table>
                 @if (assessmentReportEvent.AssociatedSCTs != null)
-                            {
-                                foreach (var _ in assessmentReportEvent.AssociatedSCTs)
-                                {
-                                    <br/>
-                                    <table class="table-nostyle offset-sm-2 table-nl">
-                                                                @{
-                                                                    var metStatus = METItemSCTScore.Score.Go;
-                                                                    foreach (var met in assessment.METs)
-                                                                    {
-                                                                        foreach (var metItem in met.METItems)
-                                                                        {
-                                                                            if (!string.IsNullOrEmpty(assessmentReportEvent.AssociatedSCTs))
+                    {
+                        
+                            <br/>
+                            <table class="table-nostyle offset-sm-2 table-nl">
+                                @{
+                                    var metStatus = METItemSCTScore.Score.Go;
+                                    foreach (var met in assessment.METs)
+                                    {
+                                        foreach (var metItem in met.METItems)
+                                        {
+                                            if (!string.IsNullOrEmpty(assessmentReportEvent.AssociatedSCTs))
+                                            {
+                                                var ids = assessmentReportEvent.AssociatedSCTs.Split(",").Select(int.Parse).ToList();
+                                                var write = false;
+                                                foreach (var s in metItem.METSCTs)
+                                                {
+                                                    if (s.Score == null || new[] { "NA", "0", "" }.Any(x => x == s.Score.SCTScore.ToString().Trim().ToUpper())) continue;
+                                                        
+                                                    if (ids.Contains(s.Id))
+                                                    {
+                                                        if (!write)
+                                                        {
+                                                            <tr title="@met.Id @metItem.Id">
+                                                                <td colspan="3">
+                                                                    <h4>MET @Html.DisplayFor(modelItem => metItem.Index) @metItem.Name</h4>
+                                                                </td>
+                                                            </tr>
+                                                            write = true;
+                                                        }
+                                                        @if (s.Score != null)
+                                                        {
+                                                            <tr>
+                                                                <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                                                                <td colspan="2">
+                                                                    <p class="card-text">
+                                                                        <i class="fa fa-check-circle @GetClass(s.Score.SCTScore)" aria-hidden="true"></i>
+                                                                        <strong>@s.Title @s.Index</strong> @s.Name
+                                                                    </p>
+                                                                </td>
+                                                            </tr>
+                                                            <tr title="@s.Score.SCTScore">
+                                                                <td colspan="2">&nbsp;</td>
+                                                                <td>
+                                                                    <ul>
+                                                                        <li class="@GetClass(s.Score.SCTScore)">
+                                                                            @s.Score.SCTScore.ToString().ToUpper():
+                                                                            @if (s.Score != null)
                                                                             {
-                                                                                var ids = assessmentReportEvent.AssociatedSCTs.Split(",").Select(int.Parse).ToList();
-                                                                                var write = false;
-                                                                                foreach (var s in metItem.METSCTs)
+                                                                                if (s.Score.SCTScore != METItemSCTScore.Score.Go)
                                                                                 {
-                                                                                    if (ids.Contains(s.Id))
+                                                                                    if (metStatus != METItemSCTScore.Score.Go)
                                                                                     {
-                                                                                        if (!write)
+                                                                                        if (metStatus != METItemSCTScore.Score.NoGo)
                                                                                         {
-                                                                                            <tr>
-                                                                                                <td colspan="3">
-                                                                                                    <h4>MET @Html.DisplayFor(modelItem => metItem.Index) @metItem.Name</h4>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                            write = true;
-                                                                                        }
-                                                                                        @if (s.Score != null)
-                                                                                        {
-                                                                                            <tr>
-                                                                                                <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-                                                                                                <td colspan="2">
-                                                                                                    <p class="card-text">
-                                                                                                        <i class="fa fa-check-circle @GetClass(s.Score.SCTScore)" aria-hidden="true"></i>
-                                                                                                        <strong>@s.Title @s.Index</strong> @s.Name
-                                                                                                    </p>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                            <tr>
-                                                                                                <td colspan="2">&nbsp;</td>
-                                                                                                <td>
-                                                                                                    <ul>
-                                                                                                        <li class="@GetClass(s.Score.SCTScore)">
-                                                                                                            @s.Score.SCTScore.ToString().ToUpper():
-                                                                                                            @if (s.Score != null)
-                                                                                                            {
-                                                                                                                if (s.Score.SCTScore != METItemSCTScore.Score.Go)
-                                                                                                                {
-                                                                                                                    if (metStatus != METItemSCTScore.Score.Go)
-                                                                                                                    {
-                                                                                                                        if (metStatus != METItemSCTScore.Score.NoGo)
-                                                                                                                        {
-                                                                                                                            metStatus = s.Score.SCTScore;
-                                                                                                                        }
-                                                                                                                    }
-                                                                                                                }
-                                                                                                                var raw = s.Score.Comments
-                                                                                                                    .Replace(Environment.NewLine, "<br />")
-                                                                                                                    .Replace("<br>", "<br />")
-                                                                                                                    .Replace("<br /><br />", "<br />")
-                                                                                                                    .Replace("<br /><br />", "<br />");
-                                                                                                                @Html.Raw(raw.Substring(0, Math.Min(raw.Length, 200)))
-                                                                                                                if (raw.Length > 200)
-                                                                                                                {
-                                                                                                                    <span>...</span>
-                                                                                                                }
-                                                                                                            }
-                                                                                                        </li>
-                                                                                                    </ul>
-                                                                                                </td>
-                                                                                            </tr>
+                                                                                            metStatus = s.Score.SCTScore;
                                                                                         }
                                                                                     }
                                                                                 }
+                                                                                var raw = s.Score.Comments
+                                                                                    .Replace(Environment.NewLine, "<br />")
+                                                                                    .Replace("<br>", "<br />")
+                                                                                    .Replace("<br /><br />", "<br />")
+                                                                                    .Replace("<br /><br />", "<br />");
+                                                                                @Html.Raw(raw.Substring(0, Math.Min(raw.Length, 200)))
+                                                                                if (raw.Length > 200)
+                                                                                {
+                                                                                    <span>...</span>
+                                                                                }
                                                                             }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            </table>              
+                                                                        </li>
+                                                                    </ul>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
-                                
-                            }
+                            </table>              
+                        
+                    }
             </div>
             
             @if (assessmentReportEvent.Details.Any())

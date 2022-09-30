@@ -165,5 +165,23 @@ namespace Seer.Infrastructure.Extensions
                     yield return num;
             }
         }
+
+        public static string RemoveSubstringsByArray(this string x, IEnumerable<string> stringsToRemove)
+        {
+            foreach (var s in stringsToRemove)
+            {
+                if (x.Contains(s))
+                {
+                    x = x.Replace(s, "");
+                }
+            }
+
+            if (x.Length > 1)
+            {
+                x = x.Trim();
+            }
+            
+            return x;
+        }
     }
 }

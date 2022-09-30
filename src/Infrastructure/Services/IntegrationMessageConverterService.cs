@@ -65,6 +65,10 @@ namespace Seer.Infrastructure.Services
 
         private void SetMessage()
         {
+            var (_, assignee) = this.HiveObject.Details.FirstOrDefault(x => x.Key is "assignee" or "owner");
+            var title = this.HiveObject.BaseObject.Title;
+            var (_, status) = this.HiveObject.Details.FirstOrDefault(x => x.Key is "status");
+            
             switch (this.Detail.HistoryType)
             {
                 default: //USER | ALERT | PROFILE
@@ -75,25 +79,42 @@ namespace Seer.Infrastructure.Services
                     break;
                 case "CASE TASK":
                 case "CASE TASK LOG":
-                    var title = this.HiveObject.BaseObject.Title;
-                    var (_, assignee) = this.HiveObject.Details.FirstOrDefault(x => x.Key is "assignee" or "owner");
                     if (assignee != null && this.Detail.HistoryType == "CASE TASK")
                     {
-                        // assigned task 2 to tdbrooks@cert.org
-                        this.Detail.Message = $"assigned {title} to {assignee}";
+                        this.Detail.Message = $"Assigned task \"{title}\" to {assignee}";
+                        break;
+                    }
+                    if (status != null && this.Detail.HistoryType == "CASE TASK")
+                    {
+                        this.Detail.Message = $"Task \"{title}\" status set to {status.ToString()?.ToLower()}";
                         break;
                     }
                     var (_, message) = this.HiveObject.Details.FirstOrDefault(x => x.Key == "message");
-                    message ??= "";
-                    this.Detail.Message = $"{title}: {ReplaceUgly(message.ToString())}".TitleCase();
+                    if (message != null)
+                    {
+                        this.Detail.Message = $"Task log updated: {ReplaceUgly(message.ToString())}".TitleCase();
+                    }
+                    else
+                    {
+                        //what was updated specifically?
+                        foreach (var detail in this.Updates.ToArray())
+                        {
+                            this.Detail.Message += $"Task {detail.Key} set to \"{detail.Value}\". ";
+                        }
+                    }
                     break;
                 case "TASK":
                 case "CASE":
                 case "CASE ARTIFACT":
-                    this.Detail.Message = $"{this.Detail.IntegrationId} {this.Detail.HistoryType} {this.Detail.HistoryAction}".TitleCase();
+                    if (assignee != null && this.Detail.HistoryType == "CASE")
+                    {
+                        this.Detail.Message = $"Assigned case \"{title}\" to {assignee}";
+                        break;
+                    }
+                    this.Detail.Message = $"{this.Detail.HistoryType} {this.Detail.HistoryAction}".TitleCase();
                     if (this.Detail.HistoryAction == "UPDATE")
                     {
-                        var details = this.Updates.Select(update => $"{update.Key} to {update.Value}").ToList();
+                        var details = this.Updates.Select(update => $"{update.Key} to \"{update.Value}\"").ToList();
                         var o = $": {string.Join(",", details)}";
                         o = ReplaceUgly(o);
                         this.Detail.Message += o;
@@ -106,7 +127,10 @@ namespace Seer.Infrastructure.Services
 
         private static string ReplaceUgly(string o)
         {
-            return string.IsNullOrEmpty(o) ? o : o.CapitalizeFirst();
+            var x = string.IsNullOrEmpty(o) ? o : o.CapitalizeFirst();
+            var junkArray = new[] { "to \"System.Dynamic.ExpandoObject\"" };
+            x = x.RemoveSubstringsByArray(junkArray);
+            return x;
         }
 
         private void SetUpdates()
