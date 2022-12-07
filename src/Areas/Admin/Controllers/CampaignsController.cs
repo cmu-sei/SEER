@@ -45,7 +45,7 @@ namespace Seer.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid) return View();
 
-            await _db.Campaigns.AddAsync(c);
+            _db.Campaigns.Add(c);
             await _db.SaveChangesAsync();
             return RedirectToAction("Index");
         }

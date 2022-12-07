@@ -136,7 +136,7 @@ namespace Seer.Areas.Admin.Controllers
                         Location = path, UserId = Guid.Parse(this.UserId), Name = fileName,
                         AssessmentId = this.AssessmentId.Value, Description = model.Description
                     };
-                    await _db.Documents.AddAsync(doc);
+                    _db.Documents.Add(doc);
                     await _db.SaveChangesAsync();
                 }
             }

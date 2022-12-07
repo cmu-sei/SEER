@@ -57,7 +57,7 @@ namespace Seer.Controllers.API
             evt.AssessmentId = request.AssessmentId;
             evt.DisplayOrder = request.DisplayOrder;
 
-            await this._db.Events.AddAsync(evt, ct);
+            this._db.Events.Add(evt);
             await this._db.SaveChangesAsync(ct);
             return Ok(evt);
         }

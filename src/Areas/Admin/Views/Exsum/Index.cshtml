@@ -23,7 +23,7 @@ DM21-0384
         {
             return span.HasValue ? new DateTime(span.Value.Ticks).ToString("HH:mm:ss") : "";
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return "";
         }

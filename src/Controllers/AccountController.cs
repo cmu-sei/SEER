@@ -85,7 +85,7 @@ namespace Seer.Controllers
         {
             if (!string.IsNullOrEmpty(this.UserId))
             {
-                await _db.History.AddAsync(new History.HistoryItem
+                _db.History.Add(new History.HistoryItem
                 { Key = History.HistoryItem.HistoryKey.LogOff, UserId = Guid.Parse(this.UserId) });
                 await _db.SaveChangesAsync();
             }

@@ -49,7 +49,7 @@ namespace Seer.Controllers.API
 
             try
             {
-                await _db.Assessments.AddAsync(model, ct);
+                _db.Assessments.Add(model);
                 await _db.SaveChangesAsync(ct);
             }
             catch (Exception e)

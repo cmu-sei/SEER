@@ -29,7 +29,7 @@ namespace Seer.Hubs
 
             var isComplete = !string.IsNullOrEmpty(status) && status.Equals("true", StringComparison.InvariantCultureIgnoreCase);
 
-            await this._context.TaskingItemResults.AddAsync(new TaskingItemResult { Comment = comment, TaskingItemId = tid, UserId = userId.ToString(), IsComplete = isComplete });
+            this._context.TaskingItemResults.Add(new TaskingItemResult { Comment = comment, TaskingItemId = tid, UserId = userId.ToString(), IsComplete = isComplete });
             await this._context.SaveChangesAsync();
 
             foreach (var connectionId in _connections.GetConnections(groupId))

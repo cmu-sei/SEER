@@ -47,7 +47,7 @@ namespace Seer.Areas.Admin.Controllers
             {
                 model.Created = DateTime.UtcNow;
                 model.AssessmentId = this.AssessmentId.Value;
-                await _db.TaskingItems.AddAsync(model);
+                _db.TaskingItems.Add(model);
                 await _db.SaveChangesAsync();
 
                 return RedirectToAction("Index");

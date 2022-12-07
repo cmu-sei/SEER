@@ -84,7 +84,7 @@ namespace Seer.Infrastructure.Services
                         {
                             if (!db.GroupUsers.Any(o => o.GroupId == group.Id && o.UserId == ssoId))
                             {
-                                await db.GroupUsers.AddAsync(new GroupUser { GroupId = group.Id, UserId = user.Id });
+                                db.GroupUsers.Add(new GroupUser { GroupId = group.Id, UserId = user.Id });
                                 _log.Trace($"adding user {email} to group: {group.Name}");
                             }
 
@@ -100,7 +100,7 @@ namespace Seer.Infrastructure.Services
             }
 
             //user exists, login
-            await db.UserJwts.AddAsync(new UserJwt { SsoId = ssoId, Jwt = token, Name = name, Email = email });
+            db.UserJwts.Add(new UserJwt { SsoId = ssoId, Jwt = token, Name = name, Email = email });
             await db.SaveChangesAsync();
 
             _log.Debug($"{ssoId}: Checking roles...");
@@ -130,7 +130,7 @@ namespace Seer.Infrastructure.Services
 
             userName = userName.MakeEmailAddress();
             user = new User { UserName = userName, Email = userName };
-            await dbContext.Users.AddAsync(user);
+            dbContext.Users.Add(user);
             await dbContext.SaveChangesAsync();
 
             return user;

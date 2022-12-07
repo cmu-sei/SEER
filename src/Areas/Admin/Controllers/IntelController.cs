@@ -45,7 +45,7 @@ namespace Seer.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
                 intelItem.AssessmentId = this.AssessmentId.Value;
-                await _db.IntelItems.AddAsync(intelItem);
+                _db.IntelItems.Add(intelItem);
                 await _db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }

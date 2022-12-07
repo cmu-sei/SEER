@@ -379,7 +379,7 @@ namespace Seer.Areas.Admin.Controllers
             var evt = new Event(o);
             evt.AssessmentId = this.AssessmentId.Value;
             evt.DisplayOrder = index;
-            await _db.Events.AddAsync(evt);
+            _db.Events.Add(evt);
             await _db.SaveChangesAsync();
 
             if (!string.IsNullOrEmpty(goToUri))

@@ -44,7 +44,7 @@ namespace Seer.Controllers.API
 
             try
             {
-                await _db.GroupUsers.AddAsync(new GroupUser { UserId = userId, GroupId = groupId }, ct);
+                _db.GroupUsers.Add(new GroupUser { UserId = userId, GroupId = groupId });
                 await _db.SaveChangesAsync(ct);
             }
             catch (Exception e)

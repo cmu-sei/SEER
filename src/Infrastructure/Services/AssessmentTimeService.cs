@@ -53,7 +53,7 @@ namespace Seer.Infrastructure.Services
                     Status = AssessmentTime.ExerciseTimeStatus.NotStarted
                 };
 
-                await _db.AssessmentTime.AddAsync(model);
+                _db.AssessmentTime.Add(model);
                 await _db.SaveChangesAsync();
             }
 
@@ -110,7 +110,7 @@ namespace Seer.Infrastructure.Services
 
             if (existingItem == null)
             {
-                await this._db.AssessmentTime.AddAsync(new AssessmentTime
+                this._db.AssessmentTime.Add(new AssessmentTime
                 {
                     AssessmentId = this.Time.AssessmentId,
                     StartTime = DateTime.UtcNow,

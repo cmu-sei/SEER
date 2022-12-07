@@ -49,7 +49,7 @@ namespace Seer.Hubs
                     SCTScore = (METItemSCTScore.Score)status,
                     UserId = userId
                 };
-                await this._context.METItemSCTScores.AddAsync(s);
+                this._context.METItemSCTScores.Add(s);
             }
             else
             {

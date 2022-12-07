@@ -70,7 +70,7 @@ namespace Seer.Hubs
                 );
             }
 
-            await this._context.METItemSCTScores.AddAsync(s);
+            this._context.METItemSCTScores.Add(s);
             await this._context.SaveChangesAsync();
 
             foreach (var connectionId in _connections.GetConnections(metId.ToString()))

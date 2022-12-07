@@ -46,18 +46,18 @@ namespace Seer.Infrastructure.Data
                     var operations = seedValue.Operations.Select(op => new Operation { Name = op }).ToList();
                     var campaign = new Campaign { Name = seedValue.Campaign, Operations = operations };
 
-                    await context.Campaigns.AddAsync(campaign);
+                    context.Campaigns.Add(campaign);
                     await context.SaveChangesAsync();
 
                     foreach (var g in seedValue.Groups)
                     {
                         var group = new Group { Name = g.Group, Status = ActiveStatus.Active };
-                        await context.Groups.AddAsync(group);
+                        context.Groups.Add(group);
                         await context.SaveChangesAsync();
                         foreach (var assessment in g.Assessments)
                         {
                             var o = await context.Operations.FirstOrDefaultAsync(x => x.Name == assessment.Name);
-                            await context.Assessments.AddAsync(
+                            context.Assessments.Add(
                                 new Assessment
                                 {
                                     Name = assessment.Name,

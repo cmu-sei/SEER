@@ -68,7 +68,7 @@ namespace Seer.Areas.Admin.Controllers
             quiz.CreatedBy = this.UserId;
             quiz.AssessmentId = this.AssessmentId.Value;
 
-            await _db.Quizzes.AddAsync(quiz);
+            _db.Quizzes.Add(quiz);
             await _db.SaveChangesAsync();
 
             _log.Debug($"Quiz created: {quiz.Name} by {User.Identity?.Name}");
@@ -135,12 +135,12 @@ namespace Seer.Areas.Admin.Controllers
                     Status = Quiz.QuizStatus.New,
                     Index = quiz.Index
                 };
-                await _db.Quizzes.AddAsync(newQuiz);
+                _db.Quizzes.Add(newQuiz);
                 await _db.SaveChangesAsync();
 
                 foreach (var question in quiz.Questions)
                 {
-                    await _db.Questions.AddAsync(new QuizQuestion
+                    _db.Questions.Add(new QuizQuestion
                     {
                         Index = question.Index,
                         Body = question.Body,

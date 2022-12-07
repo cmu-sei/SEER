@@ -77,7 +77,7 @@ namespace Seer.Controllers.API
         [ProducesResponseType(typeof(User), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> Create(User user, CancellationToken ct)
         {
-            await _db.Users.AddAsync(user, ct);
+            _db.Users.Add(user);
             await _db.SaveChangesAsync(ct);
             return Ok(user);
         }

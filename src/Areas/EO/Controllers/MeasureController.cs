@@ -81,7 +81,7 @@ public class MeasureController :  BaseController
                         met.METItems.Add(metItem);
                     }
 
-                    await _db.METs.AddAsync(met);
+                    _db.METs.Add(met);
                 }
             }
 

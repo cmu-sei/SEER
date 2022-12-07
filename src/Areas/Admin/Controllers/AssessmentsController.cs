@@ -83,7 +83,7 @@ namespace Seer.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid) return View(assessment);
 
-            await _db.Assessments.AddAsync(assessment);
+            _db.Assessments.Add(assessment);
             await _db.SaveChangesAsync();
 
             this.AssessmentId = assessment.Id;

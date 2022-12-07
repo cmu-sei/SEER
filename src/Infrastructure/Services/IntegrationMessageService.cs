@@ -131,7 +131,7 @@ namespace Seer.Infrastructure.Services
                 o.Detail.User = user;
                 o.Detail.HistoryType = "HIVE";
 
-                await dbContext.EventDetailHistory.AddAsync(o.Detail);
+                dbContext.EventDetailHistory.Add(o.Detail);
                 await dbContext.SaveChangesAsync();
 
                 //int eventId, string userId, string historyType, string message, string created)

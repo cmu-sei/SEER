@@ -74,7 +74,7 @@ namespace Seer.Areas.EO.Controllers
                         met.METItems.Add(metItem);
                     }
 
-                    await _db.METs.AddAsync(met);
+                    _db.METs.Add(met);
                 }
 
                 await _db.SaveChangesAsync();

@@ -44,7 +44,7 @@ namespace Seer.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid) return View(faq);
 
-            await _db.Faqs.AddAsync(faq);
+            _db.Faqs.Add(faq);
             await _db.SaveChangesAsync();
             return RedirectToAction("Index");
         }

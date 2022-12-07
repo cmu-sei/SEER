@@ -45,7 +45,7 @@ namespace Seer.Areas.Admin.Controllers
             announcement.AssessmentId = this.AssessmentId.Value;
             if (!ModelState.IsValid) return View(announcement);
 
-            await _db.Announcements.AddAsync(announcement);
+            _db.Announcements.Add(announcement);
             await _db.SaveChangesAsync();
             return RedirectToAction("Index");
         }

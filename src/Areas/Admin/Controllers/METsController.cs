@@ -57,7 +57,7 @@ namespace Seer.Areas.Admin.Controllers
             model.AssessmentId = this.AssessmentId.Value;
             if (!ModelState.IsValid) return View(model);
 
-            await _db.METs.AddAsync(model);
+            _db.METs.Add(model);
             await _db.SaveChangesAsync();
             return RedirectToAction("Index");
         }
@@ -156,7 +156,7 @@ namespace Seer.Areas.Admin.Controllers
                     newMet.METItems.Add(newMetItem);
                 }
 
-                await _db.METs.AddAsync(newMet);
+                _db.METs.Add(newMet);
                 await _db.SaveChangesAsync();
             }
 

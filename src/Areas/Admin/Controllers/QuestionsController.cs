@@ -72,7 +72,7 @@ namespace Seer.Areas.Admin.Controllers
             model.OwnerUserId = this.UserId;
             model.Created = DateTime.UtcNow;
             model.QuizId = id;
-            await _db.Questions.AddAsync(model);
+            _db.Questions.Add(model);
             await _db.SaveChangesAsync();
 
             return RedirectToAction("View", new { id });
@@ -148,7 +148,7 @@ namespace Seer.Areas.Admin.Controllers
                 Status = QuizAnswer.AnswerStateType.Pending,
                 Created = DateTime.UtcNow
             };
-            await this._db.Answers.AddAsync(answer);
+            this._db.Answers.Add(answer);
             await this._db.SaveChangesAsync();
 
             await this._hubContext.Clients.All.SendAsync("AnswerChanged", this.UserId, "Quiz Administrator", question.QuizId, question.Id, question.CorrectIndex, question.CorrectText);

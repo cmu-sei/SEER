@@ -52,7 +52,7 @@ namespace Seer.Controllers.API
         public async Task<IActionResult> Create(int questionId, QuizAnswer answer, CancellationToken ct)
         {
             answer.QuestionId = questionId;
-            await _db.Answers.AddAsync(answer, ct);
+            _db.Answers.Add(answer);
             await _db.SaveChangesAsync(ct);
             return Ok(answer);
         }

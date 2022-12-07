@@ -85,7 +85,7 @@ namespace Seer.Areas.Admin.Controllers
                     var raw = file.ReadAsList();
                     var deserializer = new DeserializerBuilder().Build();
                     var o = deserializer.Deserialize<AssessmentEventCatalogItem>(raw);
-                    await this._db.CatalogEvents.AddAsync(o);
+                    this._db.CatalogEvents.Add(o);
                     await this._db.SaveChangesAsync();
                 }
 
@@ -117,7 +117,7 @@ namespace Seer.Areas.Admin.Controllers
         public async Task<ActionResult> CreateEvent(int id, [FromForm] AssessmentEventCatalogItemDetail item, [FromQuery(Name = "g")] string goToUri)
         {
             item.AssessmentEventCatalogItemId = id;
-            await this._db.CatalogEventDetails.AddAsync(item);
+            this._db.CatalogEventDetails.Add(item);
             await this._db.SaveChangesAsync();
 
             if (!string.IsNullOrEmpty(goToUri))

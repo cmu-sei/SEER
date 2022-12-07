@@ -73,7 +73,7 @@ namespace Seer.Controllers
             }
 
             var doc = new Upload { Location = filePath, UserId = this.UserId, Name = file.FileName, AssessmentId = this.AssessmentId.Value };
-            await _db.Uploads.AddAsync(doc);
+            _db.Uploads.Add(doc);
             await _db.SaveChangesAsync();
 
             return RedirectToAction("Index");

@@ -51,7 +51,7 @@ namespace Seer.Controllers.API
 
             try
             {
-                await _db.Groups.AddAsync(model, ct);
+                _db.Groups.Add(model);
                 await _db.SaveChangesAsync(ct);
             }
             catch (Exception e)

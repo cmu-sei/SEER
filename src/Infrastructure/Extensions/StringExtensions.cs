@@ -149,7 +149,7 @@ namespace Seer.Infrastructure.Extensions
                     return $"{Guid.NewGuid().ToString()}@site.local";
                 return o.Contains('@') ? o.ToLower() : $"{o}@site.local".ToLower();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Console.WriteLine("Error in making email address");
                 return $"{Guid.NewGuid().ToString()}@site.local";

@@ -46,7 +46,7 @@ namespace Seer.Hubs
             answer.UserId = userId.ToString();
             answer.Status = QuizAnswer.AnswerStateType.Pending;
             answer.Created = DateTime.UtcNow;
-            await this._context.Answers.AddAsync(answer);
+            this._context.Answers.Add(answer);
             await this._context.SaveChangesAsync();
 
             var question = this._context.Questions.FirstOrDefault(o => o.Id == questionId);
@@ -72,7 +72,7 @@ namespace Seer.Hubs
                 Status = QuizAnswer.AnswerStateType.Pending,
                 Created = DateTime.UtcNow
             };
-            await this._context.Answers.AddAsync(answer);
+            this._context.Answers.Add(answer);
             await this._context.SaveChangesAsync();
 
 

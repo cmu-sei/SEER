@@ -66,7 +66,7 @@ namespace Seer.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            await _db.Groups.AddAsync(model);
+            _db.Groups.Add(model);
             await _db.SaveChangesAsync();
             _log.Debug($"Group created: {model.Name} by {User.Identity.Name}");
 
