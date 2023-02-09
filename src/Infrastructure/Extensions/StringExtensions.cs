@@ -87,7 +87,7 @@ namespace Seer.Infrastructure.Extensions
 
         public static string Clean(this string o)
         {
-            if (string.IsNullOrEmpty(o)) return o;
+            if (string.IsNullOrEmpty(o)) return "";
             o = o.StripXss();
             o = Regex.Replace(o, @"[\r\n]{2,}", Environment.NewLine);
 
