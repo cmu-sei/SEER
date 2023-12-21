@@ -1,12 +1,4 @@
-/*
-SEER - SYSTEM (for) EVENT EVALUATION RESEARCH 
-Copyright 2021 Carnegie Mellon University. 
-NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING, BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT, TRADEMARK, OR COPYRIGHT INFRINGEMENT. 
-Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms. 
-[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution.  Please see Copyright notice for non-US Government use and distribution. 
-Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University. 
-DM21-0384 
-*/
+// Copyright 2021 Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms.
 
 using System;
 using System.Collections.Generic;
@@ -35,7 +27,6 @@ namespace Seer.Controllers.API
         }
 
         [HttpGet("datapoints/{campaignId}")]
-        //[ProducesResponseType(typeof(IEnumerable<QuizAnswer>), (int) HttpStatusCode.OK)]
         public async Task<IEnumerable<CampaignDataPoint>> DatapointsGet(int campaignId, CancellationToken ct)
         {
             var campaign = await this._db.Campaigns.FirstOrDefaultAsync(x => x.Id == campaignId, ct);
@@ -43,7 +34,6 @@ namespace Seer.Controllers.API
         }
 
         [HttpPost("datapoints/{campaignId}")]
-        //[ProducesResponseType(typeof(IEnumerable<QuizAnswer>), (int) HttpStatusCode.OK)]
         public async Task<IActionResult> DatapointsCreate(int campaignId, CampaignDataPoint dataPoint, CancellationToken ct)
         {
             var campaign = await this._db.Campaigns.FirstOrDefaultAsync(x => x.Id == campaignId, ct);
@@ -53,7 +43,6 @@ namespace Seer.Controllers.API
         }
 
         [HttpPost("datapoints/{campaignId}/{dataPointId}/delete")]
-        //[ProducesResponseType(typeof(IEnumerable<QuizAnswer>), (int) HttpStatusCode.OK)]
         public async Task<IActionResult> DatapointsDelete(int campaignId, int dataPointId, CancellationToken ct)
         {
             var dataPoint = await this._db.CampaignDataPoints.FirstOrDefaultAsync(x => x.Id == dataPointId, ct);
@@ -84,24 +73,6 @@ namespace Seer.Controllers.API
                             }
 
                             detail.SCTs.Add(s);
-                        }
-                    }
-
-                    if (string.IsNullOrEmpty(detail.AssociatedQuizQuestions)) continue;
-                    {
-                        foreach (var c in detail.AssociatedQuizQuestions.Split(Convert.ToChar(",")))
-                        {
-                            var s = _db.Questions.FirstOrDefault(x => x.Id == Convert.ToInt32(c));
-                            var answers = _db.Answers.Where(x => x.QuestionId == s.Id);
-                            foreach (var answer in answers.OrderByDescending(x => x.Created))
-                            {
-                                s.AnsweredIndex = answer.AnsweredIndex;
-                                s.AnsweredBy = answer.UserId;
-                                s.AnsweredText = answer.AnsweredText;
-                                s.AnswerStatus = answer.Status;
-                                break;
-                            }
-                            detail.QuizQuestions.Add(s);
                         }
                     }
                 }
@@ -254,18 +225,7 @@ namespace Seer.Controllers.API
         public async Task<IActionResult> EventsAssociateQuestion(int assessmentId, int eventId, int eventDetailId, int questionId)
         {
             var o = await this._db.EventDetails.FirstOrDefaultAsync(x => x.Id == eventDetailId);
-            if (string.IsNullOrEmpty(o.AssociatedQuizQuestions))
-            {
-                o.AssociatedQuizQuestions = questionId.ToString();
-            }
-            else
-            {
-                var a = o.AssociatedQuizQuestions.Split(",").ToList();
-                a.Remove(questionId.ToString());
-                a.Add(questionId.ToString());
-                o.AssociatedQuizQuestions = string.Join(",", a);
-            }
-
+            
             this._db.EventDetails.Update(o);
             await this._db.SaveChangesAsync();
             return Ok();

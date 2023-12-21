@@ -1,12 +1,4 @@
-﻿/*
-SEER - SYSTEM (for) EVENT EVALUATION RESEARCH 
-Copyright 2021 Carnegie Mellon University. 
-NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING, BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT, TRADEMARK, OR COPYRIGHT INFRINGEMENT. 
-Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms. 
-[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution.  Please see Copyright notice for non-US Government use and distribution. 
-Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University. 
-DM21-0384 
-*/
+﻿// Copyright 2021 Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms.
 
 using System.Collections.Generic;
 
@@ -37,42 +29,17 @@ namespace Seer.Infrastructure.Models
     public class Configuration
     {
         public string TimeZone { get; set; }
-        public string Version { get; set; }
-        public string UserSalt { get; set; }
-        public bool RequireHttpsMetadata { get; set; }
-        public string AuthenticationAuthority { get; set; }
-        public string ClientId { get; set; }
-        public string ClientName { get; set; }
-        public string ClientSecret { get; set; }
         public string[] DefaultAdminAccounts { get; set; }
 
         public DatabaseOptions Database { get; set; }
-        
-        public SquireOptions Squire { get; set; }
-        public PlayerOptions Player { get; set; }
 
         public string Host { get; set; }
-
-        public class SquireOptions
-        {
-            public bool Enabled { get; set; }
-        }
-
+        
         public class DatabaseOptions
         {
             public string Provider { get; set; }
             public string ConnectionString { get; set; }
             public string SeedFile { get; } = "seed.json";
-        }
-
-        public class PlayerOptions
-        {
-            public string BaseUrl => System.Environment.GetEnvironmentVariable("SEER_PLAYER_BASE_URL");
-            public string Username => System.Environment.GetEnvironmentVariable("SEER_PLAYER_USERNAME");
-            public string Password => System.Environment.GetEnvironmentVariable("SEER_PLAYER_PASSWORD");
-            public string ClientSecret => System.Environment.GetEnvironmentVariable("SEER_PLAYER_CLIENT_SECRET");
-            public string ClientId => System.Environment.GetEnvironmentVariable("SEER_PLAYER_CLIENT_ID");
-            public string Scope => System.Environment.GetEnvironmentVariable("SEER_PLAYER_SCOPE");
         }
     }
 }

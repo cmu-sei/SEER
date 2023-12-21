@@ -1,12 +1,4 @@
-/*
-SEER - SYSTEM (for) EVENT EVALUATION RESEARCH 
-Copyright 2021 Carnegie Mellon University. 
-NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING, BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT, TRADEMARK, OR COPYRIGHT INFRINGEMENT. 
-Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms. 
-[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution.  Please see Copyright notice for non-US Government use and distribution. 
-Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University. 
-DM21-0384 
-*/
+// Copyright 2021 Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms.
 
 using System;
 using System.Globalization;
@@ -14,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -106,8 +99,8 @@ namespace Seer.Infrastructure.Services
         }
 
         public static async Task Process(ApplicationDbContext dbContext,
-            IHubContext<ExecutionHub> executionHubContext,
-            object payload)
+            IHubContext<ExecutionHub> executionHubContext, UserManager<User> userManager,
+            object payload, string historyType = "HIVE")
         {
             log.Debug(payload);
             try
@@ -127,9 +120,11 @@ namespace Seer.Infrastructure.Services
                 }
 
                 //determine user
-                var user = await UserService.GetUserAsync(dbContext, o.Detail.User.UserName);
+                
+                var userService = new UserService(dbContext, userManager);
+                var user = await userService.GetUserAsync(o.Detail.User.UserName);
                 o.Detail.User = user;
-                o.Detail.HistoryType = "HIVE";
+                o.Detail.HistoryType = historyType;
 
                 dbContext.EventDetailHistory.Add(o.Detail);
                 await dbContext.SaveChangesAsync();
@@ -141,6 +136,50 @@ namespace Seer.Infrastructure.Services
                     o.Detail.HistoryType,
                     o.Detail.Message,
                     o.Detail.Created.ToString(CultureInfo.InvariantCulture)
+                );
+            }
+            catch (Exception e)
+            {
+                log.Error(e);
+            }
+        }
+
+        public static async Task Process(ApplicationDbContext dbContext,
+            IHubContext<ExecutionHub> executionHubContext, UserManager<User> userManager,
+            IntegrationMessage payload, string historyType = "IRIS")
+        {
+            log.Debug(payload);
+            try
+            {
+                if (payload.Detail.AssessmentId < 0 || payload.Detail.EventId < 0)
+                {
+                    var associatedRecords = dbContext.EventDetailHistory
+                        .Where(x => x.IntegrationId == payload.Detail.IntegrationId && (x.AssessmentId < 0 || x.EventId < 0));
+                    foreach (var associatedRecord in associatedRecords)
+                    {
+                        associatedRecord.AssessmentId = payload.Detail.AssessmentId;
+                        associatedRecord.EventId = payload.Detail.EventId;
+                    }
+                    await dbContext.SaveChangesAsync();
+                }
+
+                //determine user
+                
+                var userService = new UserService(dbContext, userManager);
+                var user = await userService.GetUserAsync(payload.Detail.User.UserName);
+                payload.Detail.User = user;
+                payload.Detail.HistoryType = historyType;
+
+                dbContext.EventDetailHistory.Add(payload.Detail);
+                await dbContext.SaveChangesAsync();
+
+                //int eventId, string userId, string historyType, string message, string created)
+                await executionHubContext.Clients.All.SendAsync("note",
+                    payload.Detail.EventId,
+                    user.UserName,
+                    payload.Detail.HistoryType,
+                    payload.Detail.Message,
+                    payload.Detail.Created.ToString(CultureInfo.InvariantCulture)
                 );
             }
             catch (Exception e)

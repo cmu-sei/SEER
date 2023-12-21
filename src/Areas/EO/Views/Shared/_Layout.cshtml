@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@* Copyright 2021 Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms. *@
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -38,27 +40,17 @@
                 <li class="nav-link">
                     <span class="text-warning">@ViewBag.GroupName @ViewBag.AssessmentName &nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i></span>
                 </li>
-
-            @*     <li class="nav-item"> *@
-            @*         <a class="nav-link" href="@Url.Action("Index", "Events")"> *@
-            @*             Assessment Events *@
-            @*         </a> *@
-            @*     </li> *@
-            @*     <li> *@
-            @*         <span class="nav-link active">|</span> *@
-            @*     </li> *@
-            @*     <li class="nav-item"> *@
-            @*         <a class="nav-link" href="@Url.Action("Index", "METL")"> *@
-            @*             METL Management *@
-            @*         </a> *@
-            @*     </li> *@
-            @* } *@
-                <li class="nav-item">
-                    <a class="nav-link" href="@Url.Action("Index", "Measure")">Assessment</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="dropdownAssessment" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span>Assessments</span>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdownAssessment">
+                        <a class="dropdown-item" href="@Url.Action("Index", "Measure")">METs</a>
+                        <a class="dropdown-item" href="@Url.Action("Jmets", "Measure")">JMETs</a>
+                    </div>    
                 </li>
             }
         </ul>
-
     </div>
     <ul class="navbar-nav">
         <li class="nav-item dropdown">
@@ -108,7 +100,6 @@
 <script src="/scripts/moment.js"></script>
 <script src="/scripts/bootstrap.min.js"></script>
 
-<script src="/scripts/_Layout.js"></script>
 @await RenderSectionAsync("scripts", false)
 </body>
 

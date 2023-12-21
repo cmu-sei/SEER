@@ -1,12 +1,4 @@
-﻿/*
-SEER - SYSTEM (for) EVENT EVALUATION RESEARCH 
-Copyright 2021 Carnegie Mellon University. 
-NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING, BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT, TRADEMARK, OR COPYRIGHT INFRINGEMENT. 
-Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms. 
-[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution.  Please see Copyright notice for non-US Government use and distribution. 
-Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University. 
-DM21-0384 
-*/
+﻿// Copyright 2021 Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms.
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -91,8 +83,6 @@ namespace Seer.Infrastructure.Data
             modelBuilder.Entity<History.HistoryItem>().HasIndex(o => new { o.UserId });
             modelBuilder.Entity<IntelItem>().HasIndex(o => new { o.AssessmentId });
             
-            modelBuilder.Entity<SquiredAccount>().HasIndex(o => new { o.MatchName });
-            
             modelBuilder.Entity<Survey>().HasIndex(o => new { o.AssessmentId });
             modelBuilder.Entity<SurveyQuestion>().HasIndex(o => new { o.SurveyId });
             modelBuilder.Entity<SurveyAnswer>().HasIndex(o => new { o.QuestionId });
@@ -100,23 +90,14 @@ namespace Seer.Infrastructure.Data
             modelBuilder.Entity<MET>().HasIndex(o => new { o.AssessmentId });
             modelBuilder.Entity<Operation>().HasIndex(o => new { o.Id });
 
-            modelBuilder.Entity<Quiz>().HasIndex(o => new { o.AssessmentId });
-            modelBuilder.Entity<QuizConnection>().HasIndex(o => new { o.QuizId });
-            modelBuilder.Entity<QuizQuestion>().HasIndex(o => new { o.QuizId });
-            modelBuilder.Entity<QuizQuestion>().Property(p => p.Id).ValueGeneratedOnAdd();
-            modelBuilder.Entity<QuizAnswer>().HasIndex(o => new { o.QuestionId });
-
             modelBuilder.Entity<Section>().HasIndex(o => new { o.AssessmentId });
 
             modelBuilder.Entity<TaskingItem>().HasIndex(o => new { o.AssessmentId });
 
             modelBuilder.Entity<Upload>().HasIndex(o => new { o.AssessmentId });
-
-            modelBuilder.Entity<UserJwt>().HasIndex(o => new { o.SsoId });
         }
 
         public DbSet<Announcement> Announcements { get; set; }
-        public DbSet<QuizAnswer> Answers { get; set; }
         public DbSet<Assessment> Assessments { get; set; }
         public DbSet<AssessmentTime> AssessmentTime { get; set; }
         public DbSet<Campaign> Campaigns { get; set; }
@@ -137,18 +118,12 @@ namespace Seer.Infrastructure.Data
         public DbSet<METItemSCT> METScts { get; set; }
         public DbSet<METItemSCTScore> METItemSCTScores { get; set; }
         public DbSet<Operation> Operations { get; set; }
-        public DbSet<Quiz> Quizzes { get; set; }
-        public DbSet<QuizQuestion> Questions { get; set; }
-        public DbSet<QuizConnection> QuizConnections { get; set; }
         public DbSet<Section> Sections { get; set; }
-        public DbSet<SquiredAccount> SquiredAccounts { get; set; }
-        public DbSet<SquireIntegrations> SquireIntegrations { get; set; }
         public DbSet<Survey> Surveys { get; set; }
         public DbSet<SurveyQuestion> SurveyQuestions { get; set; }
         public DbSet<SurveyAnswer> SurveyAnswers { get; set; }
         public DbSet<TaskingItem> TaskingItems { get; set; }
         public DbSet<TaskingItemResult> TaskingItemResults { get; set; }
         public DbSet<Upload> Uploads { get; set; }
-        public DbSet<UserJwt> UserJwts { get; set; }
     }
 }

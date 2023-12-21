@@ -1,21 +1,11 @@
-/*
-SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
-Copyright 2021 Carnegie Mellon University.
-NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING, BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT, TRADEMARK, OR COPYRIGHT INFRINGEMENT.
-Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
-[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution.  Please see Copyright notice for non-US Government use and distribution.
-Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
-DM21-0384
-*/
+// Copyright 2021 Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms.
 
 using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using IdentityModel;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -26,8 +16,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Seer.Hubs;
 using Seer.Infrastructure.Data;
@@ -46,7 +34,6 @@ namespace Seer
         {
             Configuration = configuration;
             _conf = ConfigurationService.Load();
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             _isDevelopment = env.IsDevelopment();
         }
 
@@ -58,10 +45,18 @@ namespace Seer
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             
             services
-                .AddApplicationData(_conf.Database.Provider, _conf.Database.ConnectionString)
+                .AddApplicationData(_conf.Database.ConnectionString)
                 .AddApplicationServices();
 
-            services.AddIdentityCore<User>()
+            services.AddIdentityCore<User>(options =>
+                {
+                    // very lax for training and exercise purposes only
+                    options.Password.RequiredLength = 5;
+                    options.Password.RequireLowercase = false;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireDigit = false;
+                })
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddSignInManager<SignInManager<User>>()
@@ -83,7 +78,7 @@ namespace Seer
                     License = new OpenApiLicense
                     {
                         Name =
-                            $"Copyright {DateTime.Now.Year} Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms"
+                            $"Copyright 2021 Carnegie Mellon University. All Rights Reserved. See license.md file for terms"
                     }
                 });
             });
@@ -94,94 +89,25 @@ namespace Seer
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.AddAuthentication(options =>
-                {
-                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = "oidc";
-                })
-                .AddCookie(IdentityConstants.ApplicationScheme, o =>
-                {
-                    o.LoginPath = new PathString("/Account/Login");
-                    o.Events = new CookieAuthenticationEvents
-                    {
-                        OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync
-                    };
-                })
-                .AddCookie(IdentityConstants.ExternalScheme, o =>
-                {
-                    o.Cookie.Name = IdentityConstants.ExternalScheme;
-                    o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-                })
-                .AddCookie(IdentityConstants.TwoFactorRememberMeScheme, o =>
-                {
-                    o.Cookie.Name = IdentityConstants.TwoFactorRememberMeScheme;
-                    o.Events = new CookieAuthenticationEvents
-                    {
-                        OnValidatePrincipal = SecurityStampValidator.ValidateAsync<ITwoFactorSecurityStampValidator>
-                    };
-                })
-                .AddCookie(IdentityConstants.TwoFactorUserIdScheme, o =>
-                {
-                    o.Cookie.Name = IdentityConstants.TwoFactorUserIdScheme;
-                    o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-                })
-                .AddCookie(options =>
-                {
-                    options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-                    options.Cookie.Name = "seer_identity";
-                    options.Cookie.HttpOnly = true;
-                })
-                .AddOpenIdConnect("oidc", options =>
-                {
-                    options.RequireHttpsMetadata = !_isDevelopment && options.RequireHttpsMetadata;
-                    options.UsePkce = true;
-
-                    options.Authority = _conf.AuthenticationAuthority;
-                    options.RequireHttpsMetadata = _conf.RequireHttpsMetadata;
-                    options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
-                    options.SaveTokens = true;
-                    // this makes another trip to the server to fetch the information that is essentially in the token
-                    options.GetClaimsFromUserInfoEndpoint = true;
-
-                    options.ClientId = _conf.ClientId;
-
-                    options.Scope.Clear();
-                    options.Scope.Add("openid");
-                    options.Scope.Add("email");
-                    options.Scope.Add("profile");
-
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        NameClaimType = JwtClaimTypes.Name,
-                        RoleClaimType = JwtClaimTypes.Role
-                    };
-
-                    //Additional config snipped
-                    options.Events = new OpenIdConnectEvents
-                    {
-                        OnTokenResponseReceived = async ctx => { await UserService.CreateAccountAsync(ctx, _conf); },
-                        OnRedirectToIdentityProvider = context =>
-                        {
-                            context.ProtocolMessage.RedirectUri = $"{_conf.Host}/signin-oidc";
-                            return Task.FromResult(0);
-                        },
-                        OnRemoteFailure = context =>
-                        {
-                            if (context.Failure != null)
-                                context.Response.Redirect($"/account/login?e=remote_failure&m={context.Failure.Message}");
-                            context.HandleResponse();
-                            return Task.FromResult(0);
-                        },
-                        OnAuthenticationFailed = context =>
-                        {
-                            context.Response.Redirect($"/account/login?e=auth_failure&m={context.Exception.Message}");
-                            context.HandleResponse();
-                            return Task.FromResult(0);
-                        }
-                    };
-                });
+            services.AddAuthentication(delegate (AuthenticationOptions options) {
+                options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+                options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+                options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+            }).AddCookie(IdentityConstants.ApplicationScheme, delegate (CookieAuthenticationOptions o) {
+                o.LoginPath = new PathString("/account/login");
+                CookieAuthenticationEvents events1 = new CookieAuthenticationEvents();
+                events1.OnValidatePrincipal = new Func<CookieValidatePrincipalContext, Task>(SecurityStampValidator.ValidatePrincipalAsync);
+                o.Events = events1;
+            }).AddCookie(IdentityConstants.ExternalScheme, delegate (CookieAuthenticationOptions o) {
+                o.Cookie.Name = IdentityConstants.ExternalScheme;
+            }).AddCookie(IdentityConstants.TwoFactorRememberMeScheme, delegate (CookieAuthenticationOptions o) {
+                o.Cookie.Name = IdentityConstants.TwoFactorRememberMeScheme;
+                CookieAuthenticationEvents events1 = new CookieAuthenticationEvents();
+                events1.OnValidatePrincipal = new Func<CookieValidatePrincipalContext, Task>(SecurityStampValidator.ValidateAsync<ITwoFactorSecurityStampValidator>);
+                o.Events = events1;
+            }).AddCookie(IdentityConstants.TwoFactorUserIdScheme, delegate (CookieAuthenticationOptions o) {
+                o.Cookie.Name = IdentityConstants.TwoFactorUserIdScheme;
+            });
 
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
             services.AddRouting(options => options.LowercaseUrls = true);
@@ -221,9 +147,6 @@ namespace Seer
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "SEER API V1");
-                c.OAuthClientId(_conf.ClientId);
-                c.OAuthClientSecret(_conf.ClientSecret);
-                c.OAuthAppName(_conf.ClientName);
             });
 
             app.UseForwardedHeaders();
@@ -255,13 +178,10 @@ namespace Seer
                     "default",
                     "{controller=Home}/{action=Index}/{id?}");
 
-                endpoints.MapHub<AdministrationHub>("/hubs/administration");
                 endpoints.MapHub<AssessmentTimeHub>("/hubs/time");
                 endpoints.MapHub<ExecutionHub>("/hubs/execution");
                 endpoints.MapHub<METHub>("/hubs/mets");
                 endpoints.MapHub<MeasureHub>("/hubs/measure");
-                endpoints.MapHub<MouseTrackingHub>("/hubs/mouse");
-                endpoints.MapHub<QuizHub>("/hubs/quizzes");
                 endpoints.MapHub<TasksHub>("/hubs/tasks");
 
                 endpoints.MapRazorPages();

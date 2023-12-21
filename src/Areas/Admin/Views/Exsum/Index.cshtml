@@ -1,14 +1,4 @@
-@*
-SEER - SYSTEM (for) EVENT EVALUATION RESEARCH
-Copyright 2021 Carnegie Mellon University.
-NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING,
-BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT,
-TRADEMARK, OR COPYRIGHT INFRINGEMENT.
-Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
-[DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution. Please see Copyright notice for non-US Government use and distribution.
-Carnegie Mellon® and CERT® are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
-DM21-0384
-*@
+@* Copyright 2021 Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms. *@
 
 @using System.Text
 @using Newtonsoft.Json
@@ -564,21 +554,6 @@ DM21-0384
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col col-5"></div>
-                                            <div class="col col-3">
-                                                Associate Quiz Question
-                                            </div>
-                                            <div class="col col-3">
-                                                <select id="associate_quiz_@eventDetail.Id" class="form-control quiz"></select>
-                                            </div>
-                                            <div class="col col-1">
-                                                <button class="btn btn-link associate" title="Associate quiz question" data-controlid="associate_quiz_@eventDetail.Id" data-href="/api/seer/assessments/@assessment.Id/events/@assessmentReportEvent.Id/details/@eventDetail.Id/associate/question/{id}">
-                                                    <i class="fa fa-save" aria-hidden="true"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-
                                     </td>
                                 </tr>
                             }
@@ -600,93 +575,6 @@ DM21-0384
                     }
                 </table>
             </div>
-            {
-                var associatedQuizQuestionIds = new List<int>();
-                foreach (var d in assessmentReportEvent.Details)
-                {
-                    if (!string.IsNullOrEmpty(d.AssociatedQuizQuestions))
-                    {
-                        var l = d.AssociatedQuizQuestions.Split(",").Select(int.Parse).ToList();
-                        associatedQuizQuestionIds.AddRange(l);
-                    }
-                }
-                if (associatedQuizQuestionIds.Any())
-                {
-                    <h4><i class="far fa-check-circle"></i> QUIZ QUESTIONS</h4>
-                    <div class="box">
-
-                        <table class="table table-sm">
-                            @{
-                                foreach (var quiz in assessment.Quizzes)
-                                {
-                                    var sortedQuestions = quiz.Questions.OrderBy(o => o.Index).ToList();
-                                    foreach (var question in sortedQuestions)
-                                    {
-                                        if (!associatedQuizQuestionIds.Contains(question.Id))
-                                        {
-                                            continue;
-                                        }
-
-                                        var answer = string.Empty;
-                                        string correctAnswer;
-                                        if (question.Type == QuizQuestion.QuestionType.MultipleChoice)
-                                        {
-                                            correctAnswer = question.CorrectIndex switch
-                                            {
-                                                6 => question.Option6,
-                                                5 => question.Option5,
-                                                4 => question.Option4,
-                                                3 => question.Option3,
-                                                2 => question.Option2,
-                                                _ => question.Option1
-                                                };
-
-                                            if (!string.IsNullOrEmpty(question.AnsweredBy))
-                                            {
-                                                answer = question.AnsweredIndex switch
-                                                {
-                                                    6 => question.Option6,
-                                                    5 => question.Option5,
-                                                    4 => question.Option4,
-                                                    3 => question.Option3,
-                                                    2 => question.Option2,
-                                                    _ => question.Option1
-                                                    };
-                                            }
-                                        }
-                                        else
-                                        {
-                                            answer = question.AnsweredText;
-                                            correctAnswer = question.CorrectText;
-                                        }
-
-                                        var rowIcon = "exclamation-circle";
-                                        var rowStrip = "danger";
-                                        if (answer == correctAnswer)
-                                        {
-                                            rowStrip = "success";
-                                            rowIcon = "check-circle";
-                                        }
-                                        var questionType = question.Type.ToString().Replace("MultipleChoice", "Multiple Choice");
-
-                                        <tr class="table-@rowStrip">
-                                            <td style="width:24px">
-                                                <i class="fas fa-@rowIcon" aria-hidden="true"></i>
-                                            </td>
-                                            <td>@quiz.Name: Question @(question.Index). <strong>@question.Body</strong></td>
-                                            <td>@questionType</td>
-                                            <td>@answer</td>
-                                            <td>@correctAnswer</td>
-                                            <td class="right">@question.AnsweredBy</td>
-                                        </tr>
-                                    }
-                                }
-                            }
-                        </table>
-
-                    </div>
-                }
-            }
         }
 
         </div>
@@ -730,22 +618,6 @@ DM21-0384
             success: function(result) {
                 $.each(result, function( index, value ) {
                     $('#events_add').append('<option value="'+value.id+'">'+ value.name +' ('+ value.extendedName +')</option>');
-                });                         
-            },
-            error: function() {
-                alert("Sorry, the data gave us a hard time")
-            }
-        });
-        $.ajax({
-            type: "GET",
-            url: "/api/quizzes/@assessment.Id",
-            contentType: "application/json",
-            success: function(result) {
-                $.each(result, function( index, value ) {
-                    let q = value.name;
-                    $.each(value.questions, function(i, v){
-                        $('.quiz').append('<option value="'+v.id+'">' + q +': #' + v.id + ' ' + v.body + '</option>');
-                    });
                 });                         
             },
             error: function() {

@@ -1,0 +1,286 @@
+@* Copyright 2021 Carnegie Mellon University. All Rights Reserved. See LICENSE.md file for terms. *@
+
+@using Seer.Infrastructure.Extensions
+@using Seer.Infrastructure.Models
+@model IEnumerable<Seer.Infrastructure.Models.Event>
+
+@{
+    ViewBag.Title = "JMET Assessment Events";
+
+    static string Ellipsis(string text, int length)
+    {
+        text = text.Replace("Department of Defense Information Network ", "");
+        text = text.Replace("Defensive Cyberspace Operations ", "");
+        text = text.Replace("Regional Cyber Center (RCC) ", "");
+        text = text.Replace("(", "").Replace(")", "");
+
+        if (text.Length <= length) return text;
+        var pos = text.IndexOf(" ", length, StringComparison.Ordinal);
+        return pos >= 0 ? $"{text[..pos]}..." : text;
+    }
+}
+
+<style>
+    .table-sm * {font-size: small;}
+    .history_table {margin-left:5px;}
+    .history_table * { border: 0 !important; font-size: 11px; word-wrap: anywhere; }
+    .history_icon img {width: 24px; margin: 0; padding: 0;}
+    .tabs * {color: #0d6efd !important}
+    .card-header {font-weight: bolder;}
+    .card {font-size: smaller;}
+    .tab-content {padding: 20px;}
+</style>
+
+@if (ViewBag.Docs)
+{
+    <p class="pull-right">
+        <button class="btn btn-primary" type="button" id="docButton" onclick="download('docs');">
+            <span class="spinner spinner-border spinner-border-sm" id="docSpinner" role="status" aria-hidden="true" style="display:none"></span>
+            Download T&EO Reports
+        </button>
+    </p>
+}
+
+<h2>
+    @ViewBag.GroupName @ViewBag.AssessmentName - @ViewBag.Title
+</h2>
+
+<div class="row" style="margin-top: 30px">
+    <div class="col-sm-12">
+
+        @foreach (var item in Model)
+        {
+            <div class="card">
+                <div class="card-header">@item.Name</div>
+                <div class="card-body">
+                    <p class="card-text">@item.ExtendedName</p>
+                    <ul class="tabs nav nav-tabs" id="mt-@item.Id" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="home-tab-@item.Id" data-bs-toggle="tab" data-bs-target="#home-@item.Id" type="button" role="tab" aria-controls="home-@item.Id" aria-selected="true">Ratings --></button>
+                        </li>
+                        <li>
+                            <select class="form-control form-control-sm" id="selectTab" style="margin:1px 0px 0px 3px">
+                                <option value="#home-tab-@(item.Id)">Choose a JMET to measure</option>
+                                @foreach (var met in ViewBag.METs)
+                                {
+                                    <option value="#t-@(item.Id)-@(met.Id)">@Ellipsis(met.Name, 80)</option>
+                                }
+                            </select>
+                        </li>
+                        @foreach (var met in ViewBag.METs)
+                        {
+                            <li class="nav-item" role="presentation" style="display: none">
+                                <button class="nav-link" id="t-@(item.Id)-@(met.Id)" data-bs-toggle="tab" data-bs-target="#h-@(item.Id)-@(met.Id)" type="button" role="tab" aria-controls="#h-@(item.Id)-@(met.Id)" aria-selected="false">@Ellipsis(met.Name, 40)</button>
+                            </li>
+                        }
+                    </ul>
+                    <div class="tab-content" id="mtc-@item.Id">
+                        <div class="tab-pane fade show active" id="home-@item.Id" role="tabpanel" aria-labelledby="home-@item.Id-tab">
+                            <div class="spinner-grow text-light" role="status" id="history-loading-@item.Id">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <table id="history-@item.Id" data-id="@item.Id" class="history history_table"></table>
+                        </div>
+                        @foreach (var met in ViewBag.METs)
+                        {
+                            <div class="tab-pane fade" id="h-@(item.Id)-@(met.Id)" role="tabpanel" aria-labelledby="t-@(item.Id)-@(met.Id)">
+                                <table class="table table-sm">
+                                    @{
+                                        IEnumerable<METItem> metItems = met.METItems;
+                                        foreach (var metItem in metItems.OrderBy(x => x.Index))
+                                        {
+                                            <tr title="item: @metItem.Id">
+                                                <td colspan="3"><strong>@metItem.Name</strong></td>
+                                            </tr>
+                                            foreach (var sct in metItem.METSCTs.OrderBy(x => x.Index))
+                                            {
+                                                var measure = 0;
+                                                var comments = "";
+
+                                                var associatedScts = item.AssociatedSCTs.ToIntList();
+                                                foreach (var score in ((IEnumerable<METItemSCTScore>)ViewBag.Scores).Where(score => score.SCTId == sct.Id && associatedScts.Contains(sct.Id) && score.AssessmentEventId == item.Id))
+                                                {
+                                                    measure = (int)score.SCTScore;
+                                                    comments = score.Comments;
+                                                    break;
+                                                }
+                                                <tr title="item: @item.Id sct: @sct.Id">
+                                                    <td>@sct.Name</td>
+                                                    <td>
+                                                        <select class="status form-control form-control-sm option" id="status-@item.Id-@sct.Id">
+                                                            <option value="0">Provide Rating...</option>
+                                                            <option value="1"
+                                                                    @if (measure == (int)METItemSCTScore.Score.Go)
+                                                                    {
+                                                                        <text>selected="selected"</text>
+                                                                    }>
+                                                                GO
+                                                            </option>
+                                                            <option value="2"
+                                                                    @if (measure == (int)METItemSCTScore.Score.NoGo)
+                                                                    {
+                                                                        <text>selected="selected"</text>
+                                                                    }>
+                                                                NO GO
+                                                            </option>
+                                                            <option value="3"
+                                                                    @if (measure == (int)METItemSCTScore.Score.Partial)
+                                                                    {
+                                                                        <text>selected="selected"</text>
+                                                                    }>
+                                                                PARTIAL
+                                                            </option>
+                                                            <option value="9"
+                                                                    @if (measure == (int)METItemSCTScore.Score.NA)
+                                                                    {
+                                                                        <text>selected="selected"</text>
+                                                                    }>
+                                                                N/A
+                                                            </option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <textarea class="comments form-control form-control-sm option" style="height:1em" id="comments-@item.Id-@sct.Id">@comments</textarea>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <br/>
+        }
+    </div>
+</div>
+
+<input type="hidden" name="assessmentid" id="assessmentid" value="@ViewBag.AssessmentId"/>
+<input type="hidden" name="groupid" id="groupid" value="@ViewBag.GroupId"/>
+
+@section scripts {
+    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+    <script>
+    $(function () {
+        function Split(o) {
+            return o.toString().split("-");
+        }
+        
+        function getQueryStrings() { 
+          var assoc  = {};
+          var decode = function (s) { return decodeURIComponent(s.replace(/\+/g, " ")); };
+          var queryString = location.search.substring(1); 
+          var keyValues = queryString.split('&'); 
+        
+          for(var i in keyValues) { 
+            var key = keyValues[i].split('=');
+            if (key.length > 1) {
+              assoc[decode(key[0])] = decode(key[1]);
+            }
+          } 
+        
+          return assoc; 
+        } 
+        
+        function formatMessage(o) {
+            o = o.replace(/[\n\r]/g, '<br/>');
+            let a = o.split(" ")
+            o = "";
+            for (let i = 0; i < a.length; i++) {
+                if (a[i]) {
+                o += a[i].match(/.{1,30}/g).join(" ") + " "; }
+            }
+            return o;
+        }
+        
+        function formatHistoryItem(eventId, historyType, created, fName, msg) {
+            let t = moment.utc(created); 
+            if (fName === "" || fName === null) fName = "System";
+            let icon = '<img src="/content/images/'+ historyType.toLowerCase() +'.png" title="'+ historyType +'" class="fa fa-fixed" />';
+            return '<tr id="note-'+ eventId +'"><td class="history_icon">'+ icon + '</td><td nowrap="nowrap">' + 
+                t.fromNow()+'</td><td nowrap="nowrap">'+ fName +
+                '</td><td>'+ formatMessage(msg) +'</td></tr>';
+        }
+        
+         $("#selectTab").on("change", function(e) {
+          console.log(this.value);
+          $(this.value).click();
+        });
+        
+        let groupId = $("#groupid").val();
+        let assessmentId = $("#assessmentid").val();
+                
+        //history
+        var qs = getQueryStrings();
+        if (qs["view"] !== "condensed"){ 
+            $.getJSON('/api/seer/assessments/@ViewBag.AssessmentId/history?filter=HIVE', function(data) {
+                $('.history').each(function(i, obj) {
+                    let x = $(this);
+                    let eventId = x.data("id");
+                    //console.log(eventId);
+                    $.each(data, function(key, val){
+                        if (val.eventId === eventId){
+                            let u = val.user;
+                            let fName = "";
+                            if (u !== null) {
+                                fName = u.firstName;
+                            }
+                            x.append(formatHistoryItem(eventId, val.historyType, val.created, fName, val.message.replace("<", "")));
+                        }
+                    })
+                    if (typeof eventId !== "undefined") {
+                        $('#history-loading-' + eventId).hide(); 
+                    }
+                })
+            });
+        }
+        
+        const hub = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/measure?groupid=" + groupId + "&assessmentid=" + assessmentId)
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+        $(".status").on("change", null, function () {
+            preScore(this);
+        });
+        
+        $(".comments").on("change", null, function () {
+            preScore(this);
+        });
+        
+        function preScore(o){
+            let sctId = Split(o.id);
+            let eventId = sctId[1];
+            sctId = sctId[2];
+            score(eventId, sctId);
+        }
+        
+        function score(eventId, sctId) {
+            console.log(eventId, sctId)
+            hub.invoke("Measure", Number(eventId), Number(sctId), $("#comments-" + eventId + "-" + sctId).val(), Number($("#status-" + eventId + "-" + sctId).val()));
+        }
+        
+        hub.on("Measure", function (x, id, comment, status) {
+            console.table("hub returned: " + x,id,comment,status);
+        });
+    
+        hub.start().catch(err => console.error(err.toString()));
+    })
+    
+    function download(url){
+        document.getElementById('docButton').disabled = true;
+        document.getElementById('docSpinner').style.display='';
+        frame = document.createElement("iframe");
+        frame.onload=function(){document.getElementById('docSpinner').style.display='none';}
+        frame.src=url;
+        document.body.appendChild(frame);
+        
+        setTimeout(function() {
+            document.getElementById('docSpinner').style.display='none';
+            document.getElementById('docButton').disabled = false;
+        }, 10000);
+    }
+</script>
+}

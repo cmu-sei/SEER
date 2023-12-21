@@ -312,3 +312,4 @@ _db_data/
 _data/
 src/App_Data/output/*
 src/App_Data/templates/*
+metl.Production.json

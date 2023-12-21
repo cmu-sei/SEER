@@ -29,7 +29,7 @@ services:
     restart: always
 
   seer:
-    image: seer/seer
+    image: dustinupdyke/seer:3.3.4
     container_name: seer
     #    depends_on:
     #      - postgres

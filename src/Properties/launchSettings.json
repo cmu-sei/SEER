@@ -5,10 +5,10 @@
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "",
-      "applicationUrl": "http://host.docker.internal:38080",
+      "applicationUrl": "http://localhost:38080",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://host.docker.internal:38080"
+        "ASPNETCORE_URLS": "http://localhost:38080"
       }
     }
   }

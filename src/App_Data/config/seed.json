@@ -1,8 +1,29 @@
 [
   {
-    "Campaign": "GCD 2022",
+    "Campaign": "GCD 2024",
     "Operations": ["MC1", "MC2", "MC3", "EM"],
     "Groups": [
+      {
+        "Group": "RCC-ARNG",
+        "Assessments": [
+          {
+            "Name": "MC1",
+            "Status": 1
+          },
+          {
+            "Name": "MC2",
+            "Status": 1
+          },
+          {
+            "Name": "MC3",
+            "Status": 1
+          },
+          {
+            "Name": "EM",
+            "Status": 1
+          }
+        ]
+      },
       {
         "Group": "RCC-C",
         "Assessments": [

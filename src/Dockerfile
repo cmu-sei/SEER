@@ -19,7 +19,7 @@ ENV COMMIT=$commit
 
 COPY --from=dev /app/dist /app
 COPY App_Data /app/App_Data
-COPY ./license.txt /app/license.txt
+COPY ./license.md /app/license.md
 
 WORKDIR /app
 
