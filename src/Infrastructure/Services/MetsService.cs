@@ -63,7 +63,10 @@ public class MetsService
 
     public string GetPath()
     {
-        var path = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "config", $"metl.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json");
+        var path = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "config", $"metl.Production.json");
+        if (File.Exists(path)) return path;
+        
+        path = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "config", $"metl.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json");
         return File.Exists(path) ? path : Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "config", "metl.json");
     }
 
