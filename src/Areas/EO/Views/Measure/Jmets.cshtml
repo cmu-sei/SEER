@@ -59,7 +59,7 @@
                             <button class="nav-link active" id="home-tab-@item.Id" data-bs-toggle="tab" data-bs-target="#home-@item.Id" type="button" role="tab" aria-controls="home-@item.Id" aria-selected="true">Ratings --></button>
                         </li>
                         <li>
-                            <select class="form-control form-control-sm" id="selectTab" style="margin:1px 0px 0px 3px">
+                            <select class="form-control form-control-sm selectTab" id="selectTab-@item.Id" style="margin:1px 0px 0px 3px">
                                 <option value="#home-tab-@(item.Id)">Choose a JMET to measure</option>
                                 @foreach (var met in ViewBag.METs)
                                 {
@@ -204,7 +204,7 @@
                 '</td><td>'+ formatMessage(msg) +'</td></tr>';
         }
         
-         $("#selectTab").on("change", function(e) {
+         $(".selectTab").on("change", function(e) {
           console.log(this.value);
           $(this.value).click();
         });
